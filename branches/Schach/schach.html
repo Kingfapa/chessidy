@@ -1,0 +1,162 @@
+<!DOCTYPE HTML PUBLIC
+  "-//W3C//DTD HTML 4.01//EN"
+  "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html;charset=UTF-8">
+		<title>Das virtuelle Schachbrett</title>
+		<link rel="stylesheet" href="schach.css" media="screen">
+		<script src="mod_core.js" type="text/javascript"></script>
+		<script src="mod_event.js" type="text/javascript"></script>
+		<script src="schach_2.js" type="text/javascript"></script>
+		<script src="schach_1.js" type="text/javascript"></script>
+		<script type="text/javascript">
+window.error_reporting = true;
+Events.loading(Game);
+		</script>
+	</head>
+	<body>
+<!--Grundstellung-->
+		<div id="note_panel">
+			<input type="Button" id="Anfang" value="neues Spiel" tabindex="7">
+<!--Notation-->
+			<p>Notation:</p>
+			<ol id="Notation"></ol>
+			<input type="Button" id="replay" value="Spiel zeigen">
+		</div>
+<!--Brett-->
+		<table id="Schachbrett" border="0" cellspacing="0" cellpadding="0">
+			<caption></caption>
+			<tr>
+				<td>8</td>
+				<td class="white oben links" id="a8" title="a8"></td>
+				<td class="black oben" id="b8" title="b8"></td>
+				<td class="white oben" id="c8" title="c8"></td>
+				<td class="black oben" id="d8" title="d8"></td>
+				<td class="white oben" id="e8" title="e8"></td>
+				<td class="black oben" id="f8" title="f8"></td>
+				<td class="white oben" id="g8" title="g8"></td>
+				<td class="black oben rechts" id="h8" title="h8"></td>
+			</tr>
+			<tr>
+				<td>7</td>
+				<td class="black links" id="a7" title="a7"></td>
+				<td class="white" id="b7" title="b7"></td>
+				<td class="black" id="c7" title="c7"></td>
+				<td class="white" id="d7" title="d7"></td>
+				<td class="black" id="e7" title="e7"></td>
+				<td class="white" id="f7" title="f7"></td>
+				<td class="black" id="g7" title="g7"></td>
+				<td class="white rechts" id="h7" title="h7"></td>
+			</tr>
+			<tr>
+				<td>6</td>
+				<td class="white links" id="a6" title="a6"></td>
+				<td class="black" id="b6" title="b6"></td>
+				<td class="white" id="c6" title="c6"></td>
+				<td class="black" id="d6" title="d6"></td>
+				<td class="white" id="e6" title="e6"></td>
+				<td class="black" id="f6" title="f6"></td>
+				<td class="white" id="g6" title="g6"></td>
+				<td class="black rechts" id="h6" title="h6"></td>
+			</tr>
+			<tr>
+				<td>5</td>
+				<td class="black links" id="a5" title="a5"></td>
+				<td class="white" id="b5" title="b5"></td>
+				<td class="black" id="c5" title="c5"></td>
+				<td class="white" id="d5" title="d5"></td>
+				<td class="black" id="e5" title="e5"></td>
+				<td class="white" id="f5" title="f5"></td>
+				<td class="black" id="g5" title="g5"></td>
+				<td class="white rechts" id="h5" title="h5"></td>
+			</tr>
+			<tr>
+				<td>4</td>
+				<td class="white links" id="a4" title="a4"></td>
+				<td class="black" id="b4" title="b4"></td>
+				<td class="white" id="c4" title="c4"></td>
+				<td class="black" id="d4" title="d4"></td>
+				<td class="white" id="e4" title="e4"></td>
+				<td class="black" id="f4" title="f4"></td>
+				<td class="white" id="g4" title="g4"></td>
+				<td class="black rechts" id="h4" title="h4"></td>
+			</tr>
+			<tr>
+				<td>3</td>
+				<td class="black links" id="a3" title="a3"></td>
+				<td class="white" id="b3" title="b3"></td>
+				<td class="black" id="c3" title="c3"></td>
+				<td class="white" id="d3" title="d3"></td>
+				<td class="black" id="e3" title="e3"></td>
+				<td class="white" id="f3" title="f3"></td>
+				<td class="black" id="g3" title="g3"></td>
+				<td class="white rechts" id="h3" title="h3"></td>
+			</tr>
+			<tr>
+				<td>2</td>
+				<td class="white links" id="a2" title="a2"></td>
+				<td class="black" id="b2" title="b2"></td>
+				<td class="white" id="c2" title="c2"></td>
+				<td class="black" id="d2" title="d2"></td>
+				<td class="white" id="e2" title="e2"></td>
+				<td class="black" id="f2" title="f2"></td>
+				<td class="white" id="g2" title="g2"></td>
+				<td class="black rechts" id="h2" title="h2"></td>
+			</tr>
+			<tr>
+				<td>1</td>
+				<td class="black unten links" id="a1" title="a1"></td>
+				<td class="white unten" id="b1" title="b1"></td>
+				<td class="black unten" id="c1" title="c1"></td>
+				<td class="white unten" id="d1" title="d1"></td>
+				<td class="black unten" id="e1" title="e1"></td>
+				<td class="white unten" id="f1" title="f1"></td>
+				<td class="black unten" id="g1" title="g1"></td>
+				<td class="white unten rechts" id="h1" title="h1"></td>
+			</tr>
+			<tr>
+				<td> </td>
+				<td>a</td>
+				<td>b</td>
+				<td>c</td>
+				<td>d</td>
+				<td>e</td>
+				<td>f</td>
+				<td>g</td>
+				<td>h</td>
+			</tr>
+			<tr>
+				<td colspan="9" id="Zaehler">1. Zug: wei&szlig;</td>
+			</tr>
+		</table>
+<!--unterm Brett-->
+		<form action="" onsubmit="return false;">
+			<div>
+				<select id="Art" size="1" tabindex="1">
+					<option value="B" selected="selected">Bauer</option>
+					<option value="S">Springer</option>
+					<option value="L">L&auml;ufer</option>
+					<option value="T">Turm</option>
+					<option value="D">Dame</option>
+					<option value="K">K&ouml;nig</option>
+				</select>
+				<label for="Von">von: </label>
+				<input type="text" id="Von" size="2" maxlength="2" tabindex="2">
+				<label for="Nach">nach: </label>
+				<input type="text" id="Nach" size="2" maxlength="2" tabindex="3">
+				<span id="bauer">
+					<input type="checkbox" value="ep" id="enPassent"> 
+					<label for="enPassent">Schlagen en passent</label>
+				</span>
+			</div>
+			<div>
+				<input type="button" id="Los" value="     Los!     " tabindex="4"><!--Zug machen-->
+				-
+				<input type="button" id="Klein" value="Kleine Rochade" tabindex="5">
+				/
+				<input type="button" id="Gross" value="Gro&szlig;e Rochade" tabindex="6">
+			</div>
+		</form>
+	</body>
+</html>

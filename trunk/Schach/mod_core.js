@@ -1,6 +1,7 @@
+//	Object.prototype.forEachApply = function(fn) 
 Object.prototype.applyForEach = function(fn) 
 {
-	if (typeof fn != "function") 
+	if (Function !== fn)
 		throw new TypeError("Function expected!");
 	var args = [];
 	for (var i=1, lang=arguments.length; i<lang; i++) {

@@ -373,7 +373,7 @@ Board.prototype.setPlayer = function(colour, name)
 	if ("white" == colour)
 		this.players[0] = name;
 	if ("black" == colour)
-		this.players[2] = name;
+		this.players[1] = name;
 }
 // check if passed field is valid
 Board.prototype.onBoard = function(rc)

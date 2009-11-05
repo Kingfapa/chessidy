@@ -125,18 +125,41 @@ var Game = function()
 			B: "Pawn" 
 		};
 		// if (neu) skip cookie, player name popup
-		var Liste1 = ListeG; // or from cookie
-		var Liste2 = ListeF; // or from cookie
-		SB.whiteOnDraw = true; // or from cookie
-		SB.zugNr = 1; // or from cookie
+		if (neu)
+		{
+			SB.setPlayer("white", prompt("Wer spielt Weiß?", "Weiß"));
+			SB.setPlayer("black", prompt("Wer spielt Schwarz?", "Schwarz"));
+			var Liste1     = ListeG;
+			var Liste2     = ListeF;
+			SB.whiteOnDraw = true;
+			SB.zugNr       = 1;
+		}
+		else
+		{
+			var Liste1 = ListeG;
+			var Liste2 = ListeF;
+			SB.whiteOnDraw = true;
+			SB.zugNr = 1;
+/*
+		//	if (!document.cookie)
+		//		Fehler("Spielstand kann nicht rekonstruiert werden.");
+			SB.whiteOnDraw = Boolean(Code.readCookie("Farbe"));
+			SB.players[0]  = Code.readCookie("Spieler1");
+			SB.players[1]  = Code.readCookie("Spieler2");
+			SB.zugNr   = Code.readCookie("Runde");
+			var Liste1 = Code.readCookie("Aufstellung");
+			var Liste2 = Code.readCookie("Figuren");
+			var arrHis = Code.readCookie("History").split("|");
+*/
+		}
 		var clr = "white";
 		for (var i=0; i<32; i++)
 		{
 			if (16 == i)
 				clr = "black";
 			var pos = Liste1.substr(2*i, 2);
-			if (!SB.onBoard(pos))
-				continue;
+		//	if (!SB.onBoard(pos) && "xx" != pos) 
+		//		Fehler("Spielstand kann nicht rekonstruiert werden.");
 			SB.piece[i] = new window[types[Liste2.charAt(i)]](i, clr, pos);
 			SB.piece[i].observer = SB;
 			SB.position[i] = pos;
@@ -147,26 +170,25 @@ var Game = function()
 	{
 		var valid = 7; // days
 		var hist = "", stell = "", art = "";
-		var farbe = SB.isWhiteDraw() ? "white" : "black";
 		for (var i=0; i<32; i++)
 		{
 			stell += SB.position[i];
-			art   += SB.piece[i].toString().charAt(1);
+			art   += SB.piece[i].shortType();
 		}
-		for (var l, i=0, l=SB.moves.length; i<l; i++)
+		for (var l, i=1, l=SB.moves.length; i<l; i++)
 		{
-			var runde = SB.moves[i];
-			//...
+			var m = SB.moves[i];
+			hist += m.runde+","+m.von+","+m.auf+","+m.id+","+m.comment[0]+","+m.comment[1]+","+m.comment[2]+"|";
 			
 		}
 		// set cookies
 		Code.createCookie("Aufstellung", stell, valid);
 		Code.createCookie("Figuren", art, valid);
 		Code.createCookie("Runde", SB.zugNr, valid);
-		Code.createCookie("Farbe", farbe, valid);
+		Code.createCookie("Farbe", String(SB.whiteOnDraw), valid);
 		Code.createCookie("Spieler1", SB.players[0], valid);
 		Code.createCookie("Spieler2", SB.players[1], valid);
-		Code.createCookie("History", hist, valid);
+		Code.createCookie("History", hist.slice(0, -1), valid);
 	};
 	
 	var add_note = function(info)
@@ -267,7 +289,7 @@ var Game = function()
 		//	var start = function() { load(true); };
 		//	ng.addEvent("click", start);
 			// save current standings to cookie
-		//	window.onbeforeunload = save;
+			window.onbeforeunload = save;
 		}
 		catch (e)
 		{

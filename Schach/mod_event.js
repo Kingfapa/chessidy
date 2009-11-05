@@ -78,25 +78,11 @@ Events = function() {
 		},
 		
 		_addEventForEach : function(list, type, fn, cpt) {
-			if (typeof fn != "function") {
-				throw new TypeError();
-			}
-			for (var i=0, len=list.length >>> 0; i<len; i++) {
-				if (i in list) {
-					Events._addEvent(list[i], type, fn, cpt);
-				}
-			}
+			list.applyForEach(Events._addEvent, type, fn, cpt);
 		},
 		
 		_removeEventForEach : function(list, type, fn, cpt) {
-			if (typeof fn != "function") {
-				throw new TypeError();
-			}
-			for (var i=0, len=list.length >>> 0; i<len; i++) {
-				if (i in list) {
-					Events._remEvent(list[i], type, fn, cpt);
-				}
-			}
+			list.applyForEach(Events._removeEvent, type, fn, cpt);
 		},
 				
 		loading : function(callback) {
@@ -106,14 +92,25 @@ Events = function() {
 }();
 
 Element.prototype.addEvent = function(type, fn, capture) {
-	if (typeof fn != "function") {
+	if (Function !== fn) {
 		throw new TypeError("Function expected!");
 	}
-	Events._addEvent(this, type, fn, capture);
+	if (arguments.length < 4) {
+		Events._addEvent(this, type, fn, capture);
+	} else {
+		var args = [];
+		for (var i=1, lang=arguments.length; i<lang; i++) {
+			args.push(arguments[i]);
+		}
+		var tmpfn = function() {
+			fn.apply(this, args);
+		}
+		Events._addEvent(this, type, tmpfn, capture);
+	}
 }
 
 Element.prototype.remEvent = function(type, fn, capture) {
-	if (typeof fn != "function") {
+	if (Function !== fn) {
 		throw new TypeError("Function expected!");
 	}
 	Events._removeEvent(this, type, fn, capture);

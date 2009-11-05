@@ -1,7 +1,7 @@
 //	Object.prototype.forEachApply = function(fn) 
 Object.prototype.applyForEach = function(fn) 
 {
-	if (Function !== fn)
+	if ("function" != typeof fn)
 		throw new TypeError("Function expected!");
 	var args = [];
 	for (var i=1, lang=arguments.length; i<lang; i++) {
@@ -26,16 +26,11 @@ Function.prototype.forEvery = function(list)
 // by Gavin Kistner
 Function.prototype.extend = function(parentClassOrObject)
 {
-	if (parentClassOrObject.constructor == Function)
-	{
-		//Normal Inheritance
+	if ("function" == typeof parentClassOrObject.constructor) {
 		this.prototype = new parentClassOrObject;
 		this.prototype.constructor = this;
 		this.prototype.parent = parentClassOrObject.prototype;
-	}
-	else
-	{
-		//Pure Virtual Inheritance
+	} else {
 		this.prototype = parentClassOrObject;
 		this.prototype.constructor = this;
 		this.prototype.parent = parentClassOrObject;
@@ -49,7 +44,7 @@ Element.prototype.isChildOf = function(ContainerObject)
 		ContainerObject = document.getElementById(ContainerObject);
 	}
 	if (1 != ContainerObject.nodeType) {
-		throw new Error("Container Object is not an Element");
+		throw new TypeError("Container Object is not an Element");
 	}
 	var curobj = this;
 	do { 
@@ -57,7 +52,7 @@ Element.prototype.isChildOf = function(ContainerObject)
 		if (curobj == ContainerObject) {
 			return true;
 		}
-	} while (typeof curobj != "undefined");
+	} while ("undefined" != typeof curobj);
 	return false;
 } 
 
@@ -67,15 +62,6 @@ HTMLElement.prototype.appendElement = function(name, text, attr)
 	this.appendChild(EN);
 	return EN;
 }
-
-Function.prototype.bind = function(obj) 
-{
-	var method = this,
-	temp = function() {
-		return method.apply(obj, arguments);
-	};
-	return temp;
-} 
 
 Code = {
 	getElementsByClassName : function (className, tag, elm) 

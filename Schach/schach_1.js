@@ -127,12 +127,22 @@ var Game = function()
 		// if (neu) skip cookie, player name popup
 		if (neu)
 		{
-			SB.setPlayer("white", prompt("Wer spielt Weiß?", "Weiß"));
-			SB.setPlayer("black", prompt("Wer spielt Schwarz?", "Schwarz"));
-			var Liste1     = ListeG;
-			var Liste2     = ListeF;
+			SB.players[0]  = prompt("Wer spielt Weiß?", "Weiß");
+			SB.players[1]  = prompt("Wer spielt Schwarz?", "Schwarz");
 			SB.whiteOnDraw = true;
 			SB.zugNr       = 1;
+			var Liste1     = ListeG;
+			var Liste2     = ListeF;
+		}
+		else if (null !== Code.readCookie("Farbe"))
+		{
+			SB.players[0]  = Code.readCookie("Spieler1");
+			SB.players[1]  = Code.readCookie("Spieler2");
+			SB.whiteOnDraw = Boolean(Code.readCookie("Farbe"));
+			SB.zugNr   = Code.readCookie("Runde");
+			var Liste1 = Code.readCookie("Aufstellung");
+			var Liste2 = Code.readCookie("Figuren");
+			var arrHis = Code.readCookie("History").split("|");
 		}
 		else
 		{
@@ -140,17 +150,6 @@ var Game = function()
 			var Liste2 = ListeF;
 			SB.whiteOnDraw = true;
 			SB.zugNr = 1;
-/*
-		//	if (!document.cookie)
-		//		Fehler("Spielstand kann nicht rekonstruiert werden.");
-			SB.whiteOnDraw = Boolean(Code.readCookie("Farbe"));
-			SB.players[0]  = Code.readCookie("Spieler1");
-			SB.players[1]  = Code.readCookie("Spieler2");
-			SB.zugNr   = Code.readCookie("Runde");
-			var Liste1 = Code.readCookie("Aufstellung");
-			var Liste2 = Code.readCookie("Figuren");
-			var arrHis = Code.readCookie("History").split("|");
-*/
 		}
 		var clr = "white";
 		for (var i=0; i<32; i++)
@@ -175,11 +174,10 @@ var Game = function()
 			stell += SB.position[i];
 			art   += SB.piece[i].shortType();
 		}
-		for (var l, i=1, l=SB.moves.length; i<l; i++)
+		for (var l, j=1, l=SB.moves.length; j<l; j++)
 		{
-			var m = SB.moves[i];
-			hist += m.runde+","+m.von+","+m.auf+","+m.id+","+m.comment[0]+","+m.comment[1]+","+m.comment[2]+"|";
-			
+			var m = SB.moves[j];
+			hist += m.runde+","+m.white.von+","+m.white.auf+","+m.white.id+","+m.white.comment[0]+","+m.white.comment[1]+","+m.white.comment[2]+m.black.von+","+m.black.auf+","+m.black.id+","+m.black.comment[0]+","+m.black.comment[1]+","+m.black.comment[2]+"|";
 		}
 		// set cookies
 		Code.createCookie("Aufstellung", stell, valid);
@@ -286,8 +284,8 @@ var Game = function()
 			go.addEvent("click", exec);
 		//	r1.addEvent("click", rochade1);
 		//	r2.addEvent("click", rochade2);
-		//	var start = function() { load(true); };
-		//	ng.addEvent("click", start);
+			var start = function() { load(true); };
+			ng.addEvent("click", start);
 			// save current standings to cookie
 			window.onbeforeunload = save;
 		}

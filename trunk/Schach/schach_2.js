@@ -149,7 +149,7 @@ King.extend(Figur);
 King.prototype.toString = function()
 {
 	if (this.out)
-		return "xx";
+		return "xK";
 	return (this.isWhite()) ? "wK" : "sK";
 }
 
@@ -182,7 +182,7 @@ Queen.extend(Figur);
 Queen.prototype.toString = function()
 {
 	if (this.out)
-		return "xx";
+		return "xD";
 	return (this.isWhite()) ? "wD" : "sD";
 }
 
@@ -208,7 +208,7 @@ Rook.extend(Figur);
 Rook.prototype.toString = function()
 {
 	if (this.out)
-		return "xx";
+		return "xT";
 	return (this.isWhite()) ? "wT" : "sT";
 }
 
@@ -234,7 +234,7 @@ Bishop.extend(Figur);
 Bishop.prototype.toString = function()
 {
 	if (this.out)
-		return "xx";
+		return "xL";
 	return (this.isWhite()) ? "wL" : "sL";
 }
 
@@ -260,7 +260,7 @@ Knight.extend(Figur);
 Knight.prototype.toString = function()
 {
 	if (this.out)
-		return "xx";
+		return "xS";
 	return (this.isWhite()) ? "wS" : "sS";
 }
 
@@ -285,7 +285,7 @@ Pawn.extend(Figur);
 Pawn.prototype.toString = function()
 {
 	if (this.out)
-		return "xx";
+		return "xB";
 	return (this.isWhite()) ? "wB" : "sB";
 }
 

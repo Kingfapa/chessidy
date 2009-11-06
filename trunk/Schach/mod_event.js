@@ -79,16 +79,15 @@ Events = function() {
 		
 		_addEventForEach : function(list, type, fn, cpt) {
 			for (var i=0, len=list.length >>> 0; i<len; i++) {
-				if (i in this) {
+				if (i in list) {
 					Events._addEvent(list[i], type, fn, cpt);
 				}
 			}
-		//	list.applyForEach(Events._addEvent, type, fn, cpt);
 		},
 		
 		_removeEventForEach : function(list, type, fn, cpt) {
 			for (var i=0, len=list.length >>> 0; i<len; i++) {
-				if (i in this) {
+				if (i in list) {
 					Events._removeEvent(list[i], type, fn, cpt);
 				}
 			}

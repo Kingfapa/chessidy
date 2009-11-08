@@ -110,7 +110,6 @@ interface Board {
 				void		capture(in string fld);
 				void		isSchach(in Figur fig);
 		?		void		isSchachmatt(?);
-				void		load();
 				void		notate(in Figur fig,
 							       in string at,
 							       in string to);

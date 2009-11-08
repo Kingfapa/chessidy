@@ -125,31 +125,62 @@ var Game = function()
 			B: "Pawn" 
 		};
 		// if (neu) skip cookie, player name popup
+		SB.zugNr       = 1;
+		var Liste1     = ListeG;
+		var Liste2     = ListeF;
+		document.getElementById("Notation").innerHTML = "";
 		if (neu)
 		{
 			SB.players[0]  = prompt("Wer spielt Weiß?", "Weiß");
 			SB.players[1]  = prompt("Wer spielt Schwarz?", "Schwarz");
-			SB.whiteOnDraw = true;
-			SB.zugNr       = 1;
-			var Liste1     = ListeG;
-			var Liste2     = ListeF;
+			SB.moves       = ["start"];
 		}
 		else if (null !== Code.readCookie("Farbe"))
 		{
+			SB.whiteOnDraw = Boolean(Code.readCookie("Farbe"));
 			SB.players[0]  = Code.readCookie("Spieler1");
 			SB.players[1]  = Code.readCookie("Spieler2");
-			SB.whiteOnDraw = Boolean(Code.readCookie("Farbe"));
-			SB.zugNr   = Code.readCookie("Runde");
-			var Liste1 = Code.readCookie("Aufstellung");
-			var Liste2 = Code.readCookie("Figuren");
-			var arrHis = Code.readCookie("History").split("|");
+			SB.zugNr       = Code.readCookie("Runde");
+			var Liste1     = Code.readCookie("Aufstellung");
+			var Liste2     = Code.readCookie("Figuren");
+			var arrHis     = Code.readCookie("History").split("|");
+			SB.moves[0]    = "loaded";
+			for (var l, j=0, l=arrHis.length; j<l; j++)
+			{
+				var part = arrHis[j].split(",");
+				if (!part[0]) continue;
+				var InfoFarbe = function(os) 
+				{
+					this.von = part[os],
+					this.auf = part[os+1],
+					this.id  = part[os+2],
+					this.typ = ListeF.charAt(part[os+2]),
+					this.comment = [
+						part[os+3],
+						part[os+4],
+						part[os+5]
+					]
+				};
+				var w = new InfoFarbe(1);
+				SB.moves.push({ runde: part[0], white: w });
+				SB.whiteOnDraw = true;
+				add_note(w);
+				if (10 < part.length)
+				{
+					var b = new InfoFarbe(7);
+					SB.moves[SB.moves.length-1].black = b;
+					SB.whiteOnDraw = false;
+					add_note(b);
+				}
+			}
+			if (neu)
+				SB.whiteOnDraw = true;
+			else if (null !== Code.readCookie("Farbe"))
+				SB.whiteOnDraw = Boolean(Code.readCookie("Farbe"));
 		}
 		else
 		{
-			var Liste1 = ListeG;
-			var Liste2 = ListeF;
-			SB.whiteOnDraw = true;
-			SB.zugNr = 1;
+			Fehler("Spielstand kann nicht rekonstruiert werden.");
 		}
 		var clr = "white";
 		for (var i=0; i<32; i++)
@@ -157,18 +188,21 @@ var Game = function()
 			if (16 == i)
 				clr = "black";
 			var pos = Liste1.substr(2*i, 2);
-		//	if (!SB.onBoard(pos) && "xx" != pos) 
-		//		Fehler("Spielstand kann nicht rekonstruiert werden.");
+			if (!SB.onBoard(pos) && "xx" != pos) 
+				Fehler("Spielstand kann nicht rekonstruiert werden.");
 			SB.piece[i] = new window[types[Liste2.charAt(i)]](i, clr, pos);
 			SB.piece[i].observer = SB;
 			SB.position[i] = pos;
 		}
+		// mount pieces on Board
+		display.forEvery(black);
+		display.forEvery(white);
 	}
 
 	var save = function()
 	{
 		var valid = 7; // days
-		var hist = "", stell = "", art = "";
+		var hist = "", stell = "", art = ""; var x = SB;
 		for (var i=0; i<32; i++)
 		{
 			stell += SB.position[i];
@@ -177,7 +211,10 @@ var Game = function()
 		for (var l, j=1, l=SB.moves.length; j<l; j++)
 		{
 			var m = SB.moves[j];
-			hist += m.runde+","+m.white.von+","+m.white.auf+","+m.white.id+","+m.white.comment[0]+","+m.white.comment[1]+","+m.white.comment[2]+m.black.von+","+m.black.auf+","+m.black.id+","+m.black.comment[0]+","+m.black.comment[1]+","+m.black.comment[2]+"|";
+			hist += m.runde+","+m.white.von+","+m.white.auf+","+m.white.id+","+m.white.comment[0]+","+m.white.comment[1]+","+m.white.comment[2];
+			if (m.black)
+				hist += ","+m.black.von+","+m.black.auf+","+m.black.id+","+m.black.comment[0]+","+m.black.comment[1]+","+m.black.comment[2];
+			hist += "|";
 		}
 		// set cookies
 		Code.createCookie("Aufstellung", stell, valid);
@@ -268,11 +305,7 @@ var Game = function()
 		{
 			pass.call(tp); // reset after page reload
 			// load a game from cookie
-			// load(neu);
 			load(false);
-			// mount pieces on Board
-			display.forEvery(black);
-			display.forEvery(white);
 			// enable mouse selection
 			black.addEventForEach("click", fillFields);
 			white.addEventForEach("click", fillFields);
@@ -284,8 +317,7 @@ var Game = function()
 			go.addEvent("click", exec);
 		//	r1.addEvent("click", rochade1);
 		//	r2.addEvent("click", rochade2);
-			var start = function() { load(true); };
-			ng.addEvent("click", start);
+			ng.addEvent("click", load, false, true);
 			// save current standings to cookie
 			window.onbeforeunload = save;
 		}

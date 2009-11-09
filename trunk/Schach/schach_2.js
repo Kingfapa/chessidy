@@ -55,9 +55,13 @@ Figur.prototype.getCol = function(pos)
 Figur.prototype.offset = function(same)
 {
 	if (same)
+	{
 		var os = this.isWhite() ? 0 : 16;
+	}
 	else
+	{
 		var os = this.isWhite() ? 16 : 0;
+	}
 	return  os;
 }
 
@@ -72,22 +76,27 @@ Figur.prototype.movement = function(to)
 	var dif1 = this.getCol(to) - this.getCol(this.pos);
 	var dif2 = this.getRow(to) - this.getRow(this.pos);
 	if (0 == dif1 && 0 == dif2)
+	{
 		Fehler("Start- und Zielfeld sind identisch");
+	}
 	// square of real distance
 	var entf = dif1*dif1 + dif2*dif2; 
 	// orthogonal number of steps to target
 	var absl = Math.abs(dif1) + Math.abs(dif2); 
 	// direction (0: straight, 1: diagonal positive, -1: diagonal negative)
 	if (0 == dif1 || 0 == dif2)
+	{
 		quot = 0;
+	}
 	else if (Math.abs(dif1) == Math.abs(dif2))
 	{
 		quot = dif1/dif2;
 		absl /= 2; // diagonal number of steps to target
 	}
 	else
+	{
 		quot = NaN;
-	
+	}
 	return {
 		cols: dif1,
 		rows: dif2,
@@ -103,7 +112,9 @@ Figur.prototype.freeWay = function(to)
 	const cols = " abcdefgh";
 	var trail = this.movement(to);
 	if (isNaN(trail.diagonal))
+	{
 		return true;
+	}
 	Z3  = trail.steps;
 	Z2  = trail.rows / Z3; // vertical
 	Z1  = trail.cols / Z3; // horizontal
@@ -114,7 +125,9 @@ Figur.prototype.freeWay = function(to)
 	{
 		feld = cols.charAt(col - Z1*i) + (row - Z2*i);
 		if (-1 != this.observer.position.indexOf(feld))
+		{
 			Fehler("Ungültiger Zug - Figur steht im Weg");
+		}
 	}
 	return true;
 }
@@ -123,7 +136,9 @@ Figur.prototype.shift = function(to)
 {
 	// don't update on tests
 	if (this.observer.test) 
+	{
 		return;
+	}
 	this.pos = to;
 	this.history.push([this.observer.zugNr, to]);
 	this.observer.updatePosition(this.uid(), to);
@@ -149,7 +164,9 @@ King.extend(Figur);
 King.prototype.toString = function()
 {
 	if (this.out)
+	{
 		return "xK";
+	}
 	return (this.isWhite()) ? "wK" : "sK";
 }
 
@@ -182,7 +199,9 @@ Queen.extend(Figur);
 Queen.prototype.toString = function()
 {
 	if (this.out)
+	{
 		return "xD";
+	}
 	return (this.isWhite()) ? "wD" : "sD";
 }
 
@@ -208,7 +227,9 @@ Rook.extend(Figur);
 Rook.prototype.toString = function()
 {
 	if (this.out)
+	{
 		return "xT";
+	}
 	return (this.isWhite()) ? "wT" : "sT";
 }
 
@@ -234,7 +255,9 @@ Bishop.extend(Figur);
 Bishop.prototype.toString = function()
 {
 	if (this.out)
+	{
 		return "xL";
+	}
 	return (this.isWhite()) ? "wL" : "sL";
 }
 
@@ -260,7 +283,9 @@ Knight.extend(Figur);
 Knight.prototype.toString = function()
 {
 	if (this.out)
+	{
 		return "xS";
+	}
 	return (this.isWhite()) ? "wS" : "sS";
 }
 
@@ -285,7 +310,9 @@ Pawn.extend(Figur);
 Pawn.prototype.toString = function()
 {
 	if (this.out)
+	{
 		return "xB";
+	}
 	return (this.isWhite()) ? "wB" : "sB";
 }
 
@@ -295,7 +322,9 @@ Pawn.prototype.move = function(to)
 	var valid = false, go = this.movement(to);
 	var dir = (this.isWhite()) ? 1 : -1;
 	if (this.observer.isFight()) // one ahead & one left/right
+	{
 		valid = (dir == go.rows && 1 == Math.abs(go.cols));
+	}
 	else
 	{
 		if (0 == go.cols) // straight ahead
@@ -304,13 +333,19 @@ Pawn.prototype.move = function(to)
 			// en passent
 			var startRow = (this.isWhite()) ? 2 : 7;
 			if (startRow == this.getRow(this.pos) && 2*dir == go.rows)
+			{
 				valid = this.freeWay(to);
+			}
 		}
 	}
 	if (valid)
+	{
 		this.shift(to);
+	}
 	else
+	{
 		Fehler("Ungültiger Zug"); 
+	}
 }
 
 Pawn.prototype.upgrade = function(type)
@@ -323,12 +358,17 @@ Pawn.prototype.upgrade = function(type)
 		S: "Knight", 	Springer: "Knight"
 	};
 	if (type in types)
+	{
 		Name = type;
+	}
 	else if (types[type])
+	{
 		Name = types[type];
+	}
 	else
+	{
 		Fehler("Ungültiger Figurtyp");
-		
+	}	
 	newPiece = new window[Name](this.uid(), this.isWhite(), this.pos);
 //	newPiece.isBlack = this.isBlack;
 	newPiece.observer = this.observer;
@@ -371,9 +411,13 @@ Board.prototype.whois = function()
 Board.prototype.setPlayer = function(colour, name)
 {
 	if ("white" == colour)
+	{
 		this.players[0] = name;
+	}
 	if ("black" == colour)
+	{
 		this.players[1] = name;
+	}
 }
 // check if passed field is valid
 Board.prototype.onBoard = function(rc)
@@ -387,7 +431,9 @@ Board.prototype.getFigurAt = function(pos)
 {
 	var i = this.position.indexOf(pos);
 	if (-1 == i)
+	{
 		Fehler("Feld nicht belegt");
+	}
 	return this.piece[i];
 }
 // capture status
@@ -404,9 +450,13 @@ Board.prototype.isWhiteDraw = function()
 Board.prototype.offset = function(same)
 {
 	if (same)
+	{
 		var os = this.whiteOnDraw ? 0 : 16;
+	}
 	else
+	{
 		var os = this.whiteOnDraw ? 16 : 0;
+	}
 	return  os;
 }
 // set colour & turn no.
@@ -414,7 +464,9 @@ Board.prototype.toggle = function()
 {
 	this.whiteOnDraw = !this.whiteOnDraw;
 	if (this.whiteOnDraw)
+	{
 		this.zugNr++;
+	}
 }
 // update the positioning array
 Board.prototype.updatePosition = function(num, pos)
@@ -439,10 +491,14 @@ Board.prototype.hasTarget = function(to)
 {
 	// field is unoccupied
 	if (-1 == this.position.indexOf(to))
+	{
 		return false;
+	}
 	// opponent's piece on the field
 	if (this.isWhiteDraw() != this.getFigurAt(to).isWhite())
+	{
 		return true;
+	}
 	// own piece on the field
 	Fehler("Ungültiger Zug - eigene Figur auf dem Zielfeld");
 }
@@ -473,7 +529,9 @@ Board.prototype.isSchach = function(fig)
 	catch (a)
 	{
 		if (a instanceof String)
+		{
 			alert(a);
+		}
 	}
 	finally
 	{
@@ -519,7 +577,9 @@ Board.prototype.testSchach = function(pce, to)
 			try
 			{
 				if ("xx" == this.piece[i].pos)
+				{
 					continue;
+				}
 				this.piece[i].move(kf);
 			}
 			catch (e)
@@ -537,7 +597,9 @@ Board.prototype.testSchach = function(pce, to)
 	finally
 	{	// undo everything temporary
 		if (null != opp)
+		{
 			opp.pos   = opp_pos;
+		}
 		this.setPosition(pce, pce_pos);
 		this.test     = false;
 		this.schlagen = false;
@@ -556,7 +618,9 @@ Board.prototype.isSchachmatt = function()
 	catch (a)
 	{
 		if (a instanceof String)
+		{
 			alert(a);
+		}
 	}
 	finally
 	{
@@ -572,16 +636,19 @@ Board.prototype.notate = function(fig, at, to)
 		id  : fig.uid(),
 		typ : fig.shortType(),
 		comment : [
-			this.schlagen ? String.fromCharCode(10799) : "-", 
+			this.schlagen ? ":" : "-", 
 			this.schach ? "+" : "", 
 			"" // user comment, defined later
 		]
 	};
 	if (this.whiteOnDraw)
+	{
 		this.moves.push({ runde: this.zugNr, white: info });
+	}
 	else
+	{
 		this.moves[this.moves.length - 1].black = info;
-
+	}
 	return info;
 }
 /*

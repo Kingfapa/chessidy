@@ -52,19 +52,6 @@ Figur.prototype.getCol = function(pos)
 	return cols.indexOf(pos.charAt(0));
 }
 
-Figur.prototype.offset = function(same)
-{
-	if (same)
-	{
-		var os = this.isWhite() ? 0 : 16;
-	}
-	else
-	{
-		var os = this.isWhite() ? 16 : 0;
-	}
-	return  os;
-}
-
 Figur.prototype.shortType = function()
 {
 	return this.toString().charAt(1);
@@ -178,10 +165,6 @@ King.prototype.move = function(to)
 	k = this.observer.piece[k].pos;
 	(3 < this.movement(k).distance) || Fehler("Ungültiger Zug - Entfernung zum anderen König zu kurz");
 	this.shift(to);
-}
-
-King.prototype.rochade = function(gr)
-{
 }
 
 function Queen(id, f, pos)
@@ -319,19 +302,19 @@ Pawn.prototype.toString = function()
 Pawn.prototype.move = function(to)
 {
 	// check if move is valid
-	var valid = false, go = this.movement(to);
-	var dir = (this.isWhite()) ? 1 : -1;
-	if (this.observer.isFight()) // one ahead & one left/right
-	{
+	var valid    = false, go = this.movement(to);
+	var dir      = (this.isWhite()) ? 1 : -1;
+	var startRow = (this.isWhite()) ? 2 : 7;
+	if (this.observer.isFight()) 
+	{	// one ahead & one left/right
 		valid = (dir == go.rows && 1 == Math.abs(go.cols));
 	}
 	else
-	{
-		if (0 == go.cols) // straight ahead
-		{
-			valid = (dir == go.rows); // one ahead
-			// en passent
-			var startRow = (this.isWhite()) ? 2 : 7;
+	{	// straight ahead
+		if (0 == go.cols) 
+		{	// one ahead
+			valid = (dir == go.rows); 
+			// two ahead on start
 			if (startRow == this.getRow(this.pos) && 2*dir == go.rows)
 			{
 				valid = this.freeWay(to);
@@ -352,9 +335,9 @@ Pawn.prototype.upgrade = function(type)
 {
 	var newPiece, Name;
 	const types = { 
-		D: "Queen", 	Dame: "Queen", 
-		T: "Rook", 		Turm: "Rook", 
-		L: "Bishop", 	Läufer: "Bishop", 
+		D: "Queen", 	Dame:     "Queen", 
+		T: "Rook", 		Turm:     "Rook", 
+		L: "Bishop", 	Läufer:   "Bishop", 
 		S: "Knight", 	Springer: "Knight"
 	};
 	if (type in types)
@@ -370,8 +353,8 @@ Pawn.prototype.upgrade = function(type)
 		Fehler("Ungültiger Figurtyp");
 	}	
 	newPiece = new window[Name](this.uid(), this.isWhite(), this.pos);
-//	newPiece.isBlack = this.isBlack;
 	newPiece.observer = this.observer;
+	newPiece.history  = this.history;
 	this.observer.piece[this.uid()] = newPiece;
 }
 
@@ -551,8 +534,6 @@ Board.prototype.testSchach = function(pce, to)
 		this.test     = true;
 		// is there a piece to capture?
 		this.schlagen = this.hasTarget(to);
-		// where the king is
-		var kf        = this.piece[this.offset(true)].pos;
 		// throw exception if invalid move
 		pce.move(to);
 		// save current position & set temporary position 
@@ -570,25 +551,9 @@ Board.prototype.testSchach = function(pce, to)
 			var opp   = null;
 		}
 		this.schlagen = true;
-		var offset    = this.offset(false);
-		// do Board.isSchach() for every piece
-		for (var i=1+offset; i<16+offset; i++)
-		{
-			try
-			{
-				if ("xx" == this.piece[i].pos)
-				{
-					continue;
-				}
-				this.piece[i].move(kf);
-			}
-			catch (e)
-			{	// eventually leave without error
-				continue;
-			}
-			// if one piece does a correct move
-			Fehler("König steht noch im Schach!");
-		}
+		// where the king is
+		var kf        = this.piece[this.offset(true)].pos;
+		this.trySchach(kf);
 	}
 	catch (e)
 	{
@@ -628,28 +593,94 @@ Board.prototype.isSchachmatt = function()
 	}
 }
 
-Board.prototype.notate = function(fig, at, to)
+Board.prototype.trySchach = function(field)
 {
-	var info = {
-		von : at,
-		auf : to,
-		id  : fig.uid(),
-		typ : fig.shortType(),
-		comment : [
-			this.schlagen ? ":" : "-", 
-			this.schach ? "+" : "", 
-			"" // user comment, defined later
-		]
+	try
+	{
+		var offset    = this.offset(false);
+		this.test     = true;
+		this.schlagen = true;		
+		for (var i=1+offset; i<16+offset; i++)
+		{
+			try
+			{
+				if ("xx" == this.piece[i].pos)
+				{
+					continue;
+				}
+				this.piece[i].move(field);
+			}
+			catch (e)
+			{	// eventually leave without error
+				continue;
+			}
+			// if one piece does a correct move
+			Fehler("König steht noch im Schach!");
+		}
+	}
+	catch (e)
+	{
+		throw e;
+	}
+	finally
+	{	// reset (that's why this try-catch is required)
+		this.test     = false;
+		this.schlagen = false;
+	}
+}
+
+Board.prototype.rochade = function(king, rook)
+{
+	// König steht im Schach
+	if (this.schach)
+	{
+		Fehler("König steht im Schach - Rochade ist nicht erlaubt.");
+	}
+	// König wurde bewegt
+	if (0 < king.history.length)
+	{
+		Fehler("König wurde bereits gezogen - Rochade ist nicht mehr möglich.");
+	}
+	// Turm wurde bewegt
+	if (0 < rook.history.length)
+	{
+		Fehler("Turm wurde bereits gezogen - diese Rochade ist nicht mehr möglich.");
+	}
+	// get king's fields
+	var fData = {
+		a1 : ["e1", "d1", "c1"],	// w/o 1st value possible
+		h1 : ["e1", "f1", "g1"],
+		a8 : ["e8", "d8", "c8"],
+		h8 : ["e8", "f8", "g8"]
 	};
+	var felder = fData[rook.pos];
+	// eines der Königsfelder im Schach
+	for (var j=0; j<3; j++)
+	{
+		this.trySchach(felder[j]);
+	}
+	return [felder[1], felder[2]];
+}
+
+function HistoryEntry(fig, at, to, cm)
+{
+	this.von = at;
+	this.auf = to;
+	this.id  = fig.uid();
+	this.typ = fig.shortType();
+	this.comment = cm;
+}
+
+Board.prototype.notate = function(he)
+{
 	if (this.whiteOnDraw)
 	{
-		this.moves.push({ runde: this.zugNr, white: info });
+		this.moves.push({ runde: this.zugNr, white: he });
 	}
 	else
 	{
-		this.moves[this.moves.length - 1].black = info;
+		this.moves[this.moves.length - 1].black = he;
 	}
-	return info;
 }
 /*
 {Rang}{start}{-|x}{ziel}{comment}

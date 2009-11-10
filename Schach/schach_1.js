@@ -6,7 +6,6 @@ var Game = function()
 	var at = document.getElementById("Von");	// start field
 	var to = document.getElementById("Nach");	// target field
 	var tp = document.getElementById("Art");	// piece type
-	var ep = document.getElementById("bauer");	// en passent checkbox
 	// buttons
 	var go = document.getElementById("Los");	// make draw
 	var r1 = document.getElementById("Klein");	// kleine Rochade
@@ -18,21 +17,22 @@ var Game = function()
 	// board
 	var SB = new Board;
 
-	// "en passant" only for pawns
-	var pass = function()
+	// "Rochade" only for kings
+	function doro()
 	{
-		if ("B" == this.value)
+		if ("K" == this.value)
 		{
-			ep.style.visibility = "visible";
+			r1.style.visibility = "visible";
+			r2.style.visibility = "visible";
 		}
 		else
 		{
-			document.getElementById("enPassent").checked = false;
-			ep.style.visibility = "hidden";
+			r1.style.visibility = "hidden";
+			r2.style.visibility = "hidden";
 		}
 	};
 
-	var startFeld = function()
+	function startFeld()
 	{
 		try
 		{
@@ -51,7 +51,7 @@ var Game = function()
 	};
 	
 	// fill form by mouse
-	var fillFields = function() 
+	function fillFields() 
 	{
 		try
 		{
@@ -68,7 +68,7 @@ var Game = function()
 					}
 					at.value = this.title;
 					tp.value = fig.toString().charAt(1);
-					pass.call(tp);
+					doro.call(tp);
 				}
 				else
 				{
@@ -93,16 +93,20 @@ var Game = function()
 		}
 	};
 	
-	var view = function()
+	function view(v, b)
 	{
-		document.getElementById("Zaehler").innerHTML = SB;
-		document.getElementById(at.value).innerHTML = "";
-		document.getElementById(at.value).style.cursor = "default";
-		document.getElementById(to.value).innerHTML = SB.getFigurAt(to.value).symbol;
-		document.getElementById(to.value).style.cursor = "pointer";
+		$("Zaehler").innerHTML = SB;
+		setDisplay.call( $(v) );
+		setDisplay.call( $(b), SB.getFigurAt(b).symbol, "pointer");
 	};
 	
-	var display = function()
+	function setDisplay(view, shape)
+	{
+		this.innerHTML    = view  || "";
+		this.style.cursor = shape || "default";
+	}
+
+	function display()
 	{
 		document.getElementsByTagName("caption")[0].innerHTML = SB.whois();
 		document.getElementById("Zaehler").innerHTML = SB;
@@ -118,7 +122,7 @@ var Game = function()
 		}
 	};
 	
-	var load = function(neu)
+	function load(neu)
 	{
 		// default placement (white first), K-D-T-L-S-B
 		const ListeG = "e1d1a1h1c1f1b1g1a2b2c2d2e2f2g2h2e8d8a8h8c8f8b8g8a7b7c7d7e7f7g7h7";
@@ -187,7 +191,7 @@ var Game = function()
 					add_note(b);
 				}
 			}
-			SB.whiteOnDraw = Boolean(CookieFarbe);
+			SB.whiteOnDraw = "false" == CookieFarbe ? false : true;
 			SB.players[0]  = Code.readCookie("Spieler1");
 			SB.players[1]  = Code.readCookie("Spieler2");
 			SB.zugNr       = Code.readCookie("Runde");
@@ -218,7 +222,7 @@ var Game = function()
 		display.forEvery(white);
 	}
 
-	var save = function()
+	function save()
 	{
 		var valid = 7; // days
 		var hist = "", stell = "", art = "";
@@ -247,9 +251,9 @@ var Game = function()
 		Code.createCookie("History", hist.slice(0, -1), valid);
 	};
 	
-	var add_note = function(info)
+	function add_note(info)
 	{
-		var li, ol = document.getElementById("Notation");
+		var txt, li, ol = document.getElementById("Notation");
 		if (SB.isWhiteDraw())
 		{
 			li = ol.appendElement("li", "");
@@ -259,13 +263,20 @@ var Game = function()
 			var list = ol.getElementsByTagName("li");
 			li = list[list.length-1];
 		}
-		var txt = info.typ+info.von+info.comment[0]+info.auf+info.comment[1]+" "+info.comment[2]+" ";
-		txt = txt.replace("B", String.fromCharCode(160)).replace(":", String.fromCharCode(10799));
+	/*	if (info instanceof String)
+		{
+			txt = info;
+		}
+		else*/
+		{
+			txt = info.typ+info.von+info.comment[0]+info.auf+info.comment[1]+" "+info.comment[2]+" ";
+			txt = txt.replace("B", String.fromCharCode(160)).replace(":", String.fromCharCode(10799));
+		}
 		var heid = "r"+SB.zugNr+(SB.isWhiteDraw() ? "w" : "b");
 		li.appendElement("span", txt, { id: heid });
 	}
 	
-	var exec = function()
+	function exec()
 	{
 		var fig;
 		var von = at.value.toLowerCase();
@@ -278,14 +289,27 @@ var Game = function()
 			SB.testSchach(fig, nach);	// Check not removed
 			SB.capture(nach);
 			fig.move(nach);				// invalid move
-			add_note(SB.notate(fig, von, nach));
+			// notate
+			var comment = [
+					SB.schlagen ? ":" : "-", 
+					SB.schach   ? "+" : "", 
+					"" // user comment, defined later
+			]
+			var entry = new HistoryEntry(fig, von, nach, comment);
+		/*
+			entry.comment[2] = " e.p."; // en passant
+			entry.comment[2] = "=D"; // upgrade B->D
+			entry.comment[2] = " #"; // checkmate
+		*/
+			SB.notate(entry);
+			add_note(entry);
 			SB.toggle();
-			view();
+			view(von, nach);
 		}
 		catch (e)
 		{
 			alert(e.message);
-			console.log(e.stack);
+		//	console.log(e.stack);
 		}
 		finally
 		{
@@ -296,48 +320,68 @@ var Game = function()
 		}
 	};
 		
-	var rochade1 = function() 
+	function rochade(type) 
 	{
 		try
 		{
-			
+			// get affected King & Rook
+			var offs  = SB.offset(true);
+			var king  = SB.piece[offs];
+			var rook  = type ? SB.piece[offs+2] : SB.piece[offs+3];
+			var K_anf = king.pos;
+			var R_anf = rook.pos;
+			// check conditions
+			var flds  = SB.rochade(king, rook);
+			// move the pieces
+			rook.move(flds[0]);
+			king.shift(flds[1]); // must not be validated 
+			// notate move
+			var comment = [
+					type      ? "-0-" : "-", 
+					SB.schach ? "+"   : "", 
+					"" // user comment, defined later
+			];
+			// display
+			var entry = new HistoryEntry(king, 0, 0, comment);
+			entry.typ = " ";
+			SB.notate(entry);
+			add_note(entry);
+			SB.toggle();
+			// view
+			$("Zaehler").innerHTML = SB;
+			setDisplay.call($(K_anf));
+			setDisplay.call($(king.pos), king.symbol, "pointer");			
+			setDisplay.call($(R_anf));
+			setDisplay.call($(rook.pos), rook.symbol, "pointer");			
 		}
 		catch (e)
 		{
 			alert(e.message);
-		//	cleanUp();
+		}
+		finally
+		{
+		//	SB.schlagen     = false;
+		//	SB.schlagen_bak = false;
+			to.value        = "";
+			at.value        = "";
 		}
 	};
 
-	var rochade2 = function() 
-	{
-		try
-		{
-			
-		}
-		catch (e)
-		{
-			alert(e.message);
-		//	cleanUp();
-		}
-	};
-	
 	init :
 	{
 		try
 		{
-			pass.call(tp); // reset after page reload
 			// enable mouse selection
 			black.addEventForEach("click", fillFields);
 			white.addEventForEach("click", fillFields);
-			// enable en passant move selection for pawns
-			tp.addEvent("change", pass);
 			// check piece colour of start field
 			at.addEvent("blur", startFeld);
 			// attach button actions
 			go.addEvent("click", exec);
-		//	r1.addEvent("click", rochade1);
-		//	r2.addEvent("click", rochade2);
+			doro.call(tp);
+			tp.addEvent("change", doro);
+			r1.addEvent("click", rochade, false, false);
+			r2.addEvent("click", rochade, false, true);
 			ng.addEvent("click", load, false, true);
 			// load a game from cookie
 			load(false);
@@ -346,8 +390,17 @@ var Game = function()
 		}
 		catch (e)
 		{
-			alert(e.message);
-			console.log(e.stack);
+			var txt = e.message || e.description;
+			var stk = e.stack || e.stacktrace;
+			alert(txt);
+			if (window.console)
+			{
+				window.console.log(stk);
+			}
+			else if (window.opera)
+			{
+				window.opera.postError(stk);
+			}
 		}
 	}	
 }

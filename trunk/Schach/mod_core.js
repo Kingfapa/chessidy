@@ -1,15 +1,12 @@
 //	Object.prototype.forEachApply = function(fn) 
 Object.prototype.applyForEach = function(fn) 
 {
-	if ("function" != typeof fn)
+	if ("function" != typeof fn) {
 		throw new TypeError("Function expected!");
-	var args = [];
-	for (var i=1, lang=arguments.length; i<lang; i++) {
-		args.push(arguments[i]);
 	}
 	for (var i=0, len=this.length >>> 0; i<len; i++) {
 		if (i in this) {
-			fn.apply(this[i], args);
+			fn.apply(this[i], Array.prototype.slice.call(arguments, 1));
 		}
 	}
 }
@@ -64,6 +61,7 @@ HTMLElement.prototype.appendElement = function(name, text, attr)
 }
 
 Code = {
+// by class name
 	getElementsByClassName : function (className, tag, elm) 
 	{
 		if (document.getElementsByClassName) {
@@ -134,6 +132,7 @@ Code = {
 		}
 		return Code.getElementsByClassName(className, tag, elm);
 	},
+// create element
 	createCustomElement : function(name, text, attr) 
 	{
 		var EN = document.createElement(name);
@@ -147,6 +146,7 @@ Code = {
 		}
 		return EN;
 	},
+// use cookies
 	createCookie : function(name, value, days) 
 	{
 		if (days) {
@@ -175,4 +175,14 @@ Code = {
 	{
 		Code.createCookie(name, "", -1);
 	}
+}
+
+function $(id)
+{
+	return document.getElementById(id);
+}
+
+function $$(className, tag, elm)
+{
+	return Code.getElementsByClassName(className, tag, elm);
 }

@@ -99,35 +99,46 @@ Events = function() {
 	};
 }();
 
-Element.prototype.addEvent = function(type, fn, capture) {
+Element.prototype.addEvent = function(type, fn, cpt) 
+{
 	if ("function" != typeof fn) {
 		throw new TypeError("Function expected!");
 	}
 	if (arguments.length < 4) {
-		Events._addEvent(this, type, fn, capture);
+		Events._addEvent(this, type, fn, cpt);
 	} else {
-		var args = [];
-		for (var i=1, lang=arguments.length; i<lang; i++) {
-			args.push(arguments[i]);
-		}
+		var args  = Array.prototype.slice.call(arguments, 3);
 		var tmpfn = function() {
 			fn.apply(this, args);
 		}
-		Events._addEvent(this, type, tmpfn, capture);
+		Events._addEvent(this, type, tmpfn, cpt);
 	}
 }
 
-Element.prototype.remEvent = function(type, fn, capture) {
+Element.prototype.remEvent = function(type, fn, cpt) 
+{
 	if ("function" != typeof fn) {
 		throw new TypeError("Function expected!");
 	}
-	Events._removeEvent(this, type, fn, capture);
+	Events._removeEvent(this, type, fn, cpt);
 }
 
-Object.prototype.addEventForEach = function(type, fn, cpt) {
-	Events._addEventForEach(this, type, fn, cpt);
+Object.prototype.addEventForEach = function(type, fn, cpt) 
+{
+	if ("function" != typeof fn) {
+		throw new TypeError("Function expected!");
+	}
+	if (arguments.length < 4) {
+		Events._addEventForEach(this, type, fn, cpt);
+	} else {
+		var tmpfn = function() {
+			fn.apply(this, Array.prototype.slice.call(arguments, 3));
+		}
+		Events._addEventForEach(this, type, tmpfn, cpt);
+	}
 }
 
-Object.prototype.remEventForEach = function(type, fn, cpt) {
+Object.prototype.remEventForEach = function(type, fn, cpt) 
+{
 	Events._removeEventForEach(this, type, fn, cpt);
 }

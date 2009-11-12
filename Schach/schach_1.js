@@ -6,14 +6,16 @@ var Game = function()
 	var at = document.getElementById("Von");	// start field
 	var to = document.getElementById("Nach");	// target field
 	var tp = document.getElementById("Art");	// piece type
+	// output elements
+	var ct = document.getElementById("Zaehler") // status display
 	// buttons
 	var go = document.getElementById("Los");	// make draw
 	var r1 = document.getElementById("Klein");	// kleine Rochade
 	var r2 = document.getElementById("Gross");	// große Rochade
 	var ng = document.getElementById("Anfang");	// start new game
 	// board fields
-	var black  = document.getElementsByClassName("black");
-	var white  = document.getElementsByClassName("white");
+	var black  = Code.getElementsByClassName("black");
+	var white  = Code.getElementsByClassName("white");
 	// board
 	var SB     = new Board;
 	// other "global" variables
@@ -33,7 +35,7 @@ var Game = function()
 			r1.style.visibility = "hidden";
 			r2.style.visibility = "hidden";
 		}
-	};
+	}
 
 	function startFeld()
 	{
@@ -51,8 +53,8 @@ var Game = function()
 			alert(e.message);
 			at.value = "";
 		}
-	};
-	
+	}
+
 	// fill form by mouse
 	function fillFields() 
 	{
@@ -94,25 +96,19 @@ var Game = function()
 			alert(e.message);
 			at.value = "";
 		}
-	};
+	}
 	
-	function view(v, b)
+	function setDisplay(id, view, shape)
 	{
-		$("Zaehler").innerHTML = SB;
-		setDisplay.call( $(v) );
-		setDisplay.call( $(b), SB.getFigurAt(b).symbol, "pointer");
-	};
-	
-	function setDisplay(view, shape)
-	{
-		this.innerHTML    = view  || "";
-		this.style.cursor = shape || "default";
+		var td = document.getElementById(id); // not checked
+		td.innerHTML    = view  || "";
+		td.style.cursor = shape || "default";
 	}
 
 	function display()
 	{
 		document.getElementsByTagName("caption")[0].innerHTML = SB.whois();
-		document.getElementById("Zaehler").innerHTML = SB;
+		ct.innerHTML = SB;
 		try
 		{
 			this.innerHTML = SB.getFigurAt(this.title).symbol;
@@ -123,7 +119,7 @@ var Game = function()
 			this.innerHTML = "";
 			this.style.cursor = "default";
 		}
-	};
+	}
 	
 	function load(neu)
 	{
@@ -256,7 +252,7 @@ var Game = function()
 		Code.createCookie("Spieler1", SB.players[0], valid);
 		Code.createCookie("Spieler2", SB.players[1], valid);
 		Code.createCookie("History", hist.slice(0, -1), valid);
-	};
+	}
 	
 	function add_note(info)
 	{
@@ -270,23 +266,16 @@ var Game = function()
 			var list = ol.getElementsByTagName("li");
 			li = list[list.length-1];
 		}
-	/*	if (info instanceof String)
-		{
-			txt = info;
-		}
-		else*/
-		{
-			txt = info.typ+info.von+info.comment[0]+info.auf+info.comment[1]+" "+info.comment[2]+" ";
-			txt = txt.replace("B", String.fromCharCode(160)).replace(":", String.fromCharCode(10799));
-		}
+		txt = info.typ+info.von+info.comment[0]+info.auf+info.comment[1]+" "+info.comment[2]+" ";
+		txt = txt.replace("B", String.fromCharCode(160)).replace(":", String.fromCharCode(10799));
 		var heid = "r"+SB.zugNr+(SB.isWhiteDraw() ? "w" : "b");
 		li.appendElement("span", txt, { id: heid });
 	}
 	
 	function exec()
 	{
-		var fig;
-		var von = at.value.toLowerCase();
+		var fig, ep;
+		var von  = at.value.toLowerCase();
 		var nach = to.value.toLowerCase();
 		try
 		{
@@ -295,6 +284,10 @@ var Game = function()
 			fig = SB.getFigurAt(von);	// no piece at "von"
 			SB.testSchach(fig, nach);	// Check not removed
 			SB.capture(nach);
+			// setting this.schlagen for an "en passant" move
+			// does not cover the case where the captured pawn
+			// is involved in a Check situation
+			ep = fig.enPassant();
 			fig.move(nach);				// invalid move
 			// notate
 			var comment = [
@@ -303,20 +296,28 @@ var Game = function()
 				"" // user comment, defined later
 			]
 			var entry = new HistoryEntry(fig, von, nach, comment);
+			// modify for "en passant moves"
+			if (ep instanceof HistoryEntry)
+			{
+				entry.comment[2] = " e.p."; // en passant
+				setDisplay(ep.auf);         // remove image
+				SB.position[ep.id]  = "xx"; // move piece to trash
+			}
 		/*
-			entry.comment[2] = " e.p."; // en passant
 			entry.comment[2] = "=D"; // upgrade B->D
 			entry.comment[2] = " #"; // checkmate
 		*/
 			SB.notate(entry);
 			add_note(entry);
 			SB.toggle();
-			view(von, nach);
+			ct.innerHTML = SB;
+			setDisplay(von);
+			setDisplay(nach, fig.symbol, "pointer");
 		}
 		catch (e)
 		{
 			alert(e.message);
-			console.log(e.stack);
+			console.log(e.stack); // for debugging only
 		}
 		finally
 		{
@@ -325,13 +326,12 @@ var Game = function()
 			to.value        = "";
 			at.value        = "";
 		}
-	};
+	}
 		
 	function rochade(type) 
 	{
 		try
-		{
-			// get affected King & Rook
+		{	// get affected King & Rook
 			var offs  = SB.offset(true);
 			var king  = SB.piece[offs];
 			var rook  = type ? SB.piece[offs+2] : SB.piece[offs+3];
@@ -348,37 +348,36 @@ var Game = function()
 				SB.schach ? "+"   : "", 
 				"" // user comment, defined later
 			];
-			// display
 			var entry = new HistoryEntry(king, 0, 0, comment);
-			entry.typ = " ";
 			SB.notate(entry);
+			entry.typ = " ";
 			add_note(entry);
 			SB.toggle();
 			// view
-			document.getElementById("Zaehler").innerHTML = SB;
-			setDisplay.call($(K_anf));
-			setDisplay.call($(king.pos), king.symbol, "pointer");			
-			setDisplay.call($(R_anf));
-			setDisplay.call($(rook.pos), rook.symbol, "pointer");			
+			ct.innerHTML = SB;
+			setDisplay(K_anf);
+			setDisplay(king.pos, king.symbol, "pointer");			
+			setDisplay(R_anf);
+			setDisplay(rook.pos, rook.symbol, "pointer");			
 		}
 		catch (e)
 		{
 			alert(e.message);
+			console.log(e.message); // for debugging only
 		}
 		finally
 		{
-		//	SB.schlagen     = false;
-		//	SB.schlagen_bak = false;
+			SB.schlagen     = false;
+			SB.schlagen_bak = false;
 			to.value        = "";
 			at.value        = "";
 		}
-	};
+	}
 
 	init :
 	{
 		try
-		{
-			// enable mouse selection
+		{	// enable mouse selection
 			black.addEventForEach("click", fillFields);
 			white.addEventForEach("click", fillFields);
 			// check piece colour of start field
@@ -397,10 +396,9 @@ var Game = function()
 			window.onbeforeunload = save;
 		}
 		catch (e)
-		{
+		{	// there are no message exceptions...
 			var txt = e.message || e.description;
 			var stk = e.stack   || e.stacktrace;
-			alert(txt);
 			if (window.console)
 			{
 				window.console.log(stk);
@@ -409,6 +407,7 @@ var Game = function()
 			{
 				window.opera.postError(stk);
 			}
+			alert(txt);
 		}
 	}	
 }

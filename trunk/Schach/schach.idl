@@ -3,14 +3,13 @@
 //										raises(ExceptionTYPE);
 	
 interface Figur {
-	attribute	boolean		out;
 	attribute	Board		observer;
+				boolean		enPassant();
 				boolean		freeWay(in string to)
 										raises(Error);
 				boolean		isWhite();
 				integer		getCol(in mixed pos);
 				integer		getRow(in mixed pos);
-				integer		offset(in boolean same);
 				object		movement(in string to)
 										raises(Error);
 				string		shortType();
@@ -27,8 +26,6 @@ interface King : Figur {
 				string		toString();
 				void		move(in string to)
 										raises(Error);
-				?			rochade(in ? gr)
-										raises(Error); // ??
 };
 
 interface Queen : Figur {
@@ -81,6 +78,7 @@ interface Pawn : Figur {
 	attribute	string		symbol;
 				boolean		isWhite();
 				integer		uid();
+				mixed		enPassant();
 				string		toString();
 				void		move(in string to)
 										raises(Error);
@@ -97,30 +95,34 @@ interface Board {
 	attribute	boolean		schlagen_bak;
 	attribute	boolean		whiteOnDraw;
 	attribute	integer		zugNr;
+				array		rochade(in Figur king,
+							        in Figur rook)
+										raises(Error);
 				boolean		hasTarget(in string to)
 										raises(Error);
 				boolean		onBoard(in string pos);
 				boolean		isFight();
 				boolean		isWhiteDraw();
 				integer		offset(in boolean same);
+				mixed		isSchachmatt();
 				string		setPosition(in Figur fig
 							            in string pos);
 				string		toString();
 				string		whois();
 				void		capture(in string fld);
 				void		isSchach(in Figur fig);
-		?		void		isSchachmatt(?);
-				void		notate(in Figur fig,
-							       in string at,
-							       in string to);
+				void		notate(in HistoryEntry he);
 				void		setPlayer(in string colour,
 							          in string name);
 				void		testSchach(in Figur pce
 							           in string to)
 										raises(Error);
 				void		toggle();
+				void		trySchach(in string field)
+										raises(Error);
 				void		updatePosition(in integer num,
 							               in string pos);
 				Figur		getFigurAt(in string pos)
 										raises(Error);
+				HistoryEntry lastMove();
 };

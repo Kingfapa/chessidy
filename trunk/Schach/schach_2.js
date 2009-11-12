@@ -14,13 +14,17 @@ Array.prototype.swap = function(index, wert)
 
 function Fehler(msg)
 {
-//	if (true == window.error_reporting) // for play ahead checks?
-		throw new Error(msg);
+	throw new Error(msg);
+}
+
+function Meldung(txt)
+{
+//	if (true == window.error_reporting)
+		throw new String(txt);
 }
 
 function Figur() 
 {
-	this.out      = false;	// out of game?
 	this.observer = null;	// Board (method access)
 }
 // set piece's colour
@@ -130,6 +134,11 @@ Figur.prototype.shift = function(to)
 	this.history.push([this.observer.zugNr, to]);
 	this.observer.updatePosition(this.uid(), to);
 }
+// dummy function only replaced in Pawn, so I can call it safely
+Figur.prototype.enPassant = function()
+{
+	return false;
+}
 
 function King(id, f, pos)
 {
@@ -150,11 +159,7 @@ King.extend(Figur);
 
 King.prototype.toString = function()
 {
-	if (this.out)
-	{
-		return "xK";
-	}
-	return (this.isWhite()) ? "wK" : "sK";
+	return this.isWhite() ? "wK" : "sK";
 }
 
 King.prototype.move = function(to)
@@ -181,11 +186,7 @@ Queen.extend(Figur);
 
 Queen.prototype.toString = function()
 {
-	if (this.out)
-	{
-		return "xD";
-	}
-	return (this.isWhite()) ? "wD" : "sD";
+	return this.isWhite() ? "wD" : "sD";
 }
 
 Queen.prototype.move = function(to)
@@ -209,11 +210,7 @@ Rook.extend(Figur);
 
 Rook.prototype.toString = function()
 {
-	if (this.out)
-	{
-		return "xT";
-	}
-	return (this.isWhite()) ? "wT" : "sT";
+	return this.isWhite() ? "wT" : "sT";
 }
 
 Rook.prototype.move = function(to)
@@ -237,11 +234,7 @@ Bishop.extend(Figur);
 
 Bishop.prototype.toString = function()
 {
-	if (this.out)
-	{
-		return "xL";
-	}
-	return (this.isWhite()) ? "wL" : "sL";
+	return this.isWhite() ? "wL" : "sL";
 }
 
 Bishop.prototype.move = function(to)
@@ -265,11 +258,7 @@ Knight.extend(Figur);
 
 Knight.prototype.toString = function()
 {
-	if (this.out)
-	{
-		return "xS";
-	}
-	return (this.isWhite()) ? "wS" : "sS";
+	return this.isWhite() ? "wS" : "sS";
 }
 
 Knight.prototype.move = function(to)
@@ -292,11 +281,7 @@ Pawn.extend(Figur);
 
 Pawn.prototype.toString = function()
 {
-	if (this.out)
-	{
-		return "xB";
-	}
-	return (this.isWhite()) ? "wB" : "sB";
+	return this.isWhite() ? "wB" : "sB";
 }
 
 Pawn.prototype.move = function(to)
@@ -349,21 +334,26 @@ Pawn.prototype.enPassant = function()
 		return false;
 	}
 	// if not a double step
-	if (2 != abs(this.getRow(last.von) - this.getRow(last.auf)))
+	if (2 != Math.abs(this.getRow(lastMove.von) - this.getRow(lastMove.auf)))
 	{
 		return false;
 	}
 	// if not on adjacent col
-	if (1 != abs(this.getCol(this.pos) - this.getCol(last.auf)))
+	if (1 != Math.abs(this.getCol(this.pos) - this.getCol(lastMove.auf)))
 	{
 		return false;
 	}
-// more code
-	return true;
+	this.observer.schlagen     = true; 
+	this.observer.schlagen_bak = true;
+	return lastMove;
 }
 
 Pawn.prototype.upgrade = function(type)
 {
+	if  ("B" == type || "Bauer" == type)
+	{	// no change
+		return;
+	}
 	var newPiece, Name;
 	const types = { 
 		D: "Queen", 	Dame:     "Queen", 
@@ -371,21 +361,19 @@ Pawn.prototype.upgrade = function(type)
 		L: "Bishop", 	Läufer:   "Bishop", 
 		S: "Knight", 	Springer: "Knight"
 	};
-	if (type in types)
-	{
-		Name = type;
-	}
-	else if (types[type])
+	if (types[type])
 	{
 		Name = types[type];
 	}
 	else
 	{
 		Fehler("Ungültiger Figurtyp");
-	}	
+	}
+	// create a new piece
 	newPiece = new window[Name](this.uid(), this.isWhite(), this.pos);
 	newPiece.observer = this.observer;
 	newPiece.history  = this.history;
+	// replace the pawn with the new piece
 	this.observer.piece[this.uid()] = newPiece;
 }
 
@@ -488,10 +476,9 @@ Board.prototype.updatePosition = function(num, pos)
 	idx = this.position.indexOf(pos);
 	if (this.schlagen && -1 != idx)
 	{
-		this.piece[idx].out = true;
 		this.position[idx]  = "xx";
 	}
-	this.position[num] = pos.substr(0,2);
+	this.position[num] = pos.substr(0,2); // just to make sure
 	this.isSchach(this.piece[num]);
 }
 // change the position array (temporarily)
@@ -567,7 +554,7 @@ Board.prototype.isSchach = function(fig)
 		fig.move(kf);
 		// otherwise it's Schach
 		this.schach   = true;
-		throw new String("Schach!");
+		Meldung("Schach!");
 	}
 	catch (a)
 	{
@@ -639,8 +626,8 @@ Board.prototype.isSchachmatt = function()
 		{
 			return false;
 		}
-		this.test     = true;
-		var king      = this.piece[this.offset(true)];
+		this.test = true;
+		var king  = this.piece[this.offset(true)];
 		// determine the valid fields the king can move to
 		var kingsFields = [];
 		const feld = [
@@ -679,7 +666,7 @@ Board.prototype.isSchachmatt = function()
 			}
 			throw new Boolean(false);
 		}
-		throw new String("Schachmatt!");
+		Meldung("Schachmatt!");
 	}
 	catch (a)
 	{

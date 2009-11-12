@@ -12,10 +12,13 @@ var Game = function()
 	var r2 = document.getElementById("Gross");	// große Rochade
 	var ng = document.getElementById("Anfang");	// start new game
 	// board fields
-	var black = document.getElementsByClassName("black");
-	var white = document.getElementsByClassName("white");
+	var black  = document.getElementsByClassName("black");
+	var white  = document.getElementsByClassName("white");
 	// board
-	var SB = new Board;
+	var SB     = new Board;
+	// other "global" variables
+	var Liste1 = "e1d1a1h1c1f1b1g1a2b2c2d2e2f2g2h2e8d8a8h8c8f8b8g8a7b7c7d7e7f7g7h7";
+	var Liste2 = "KDTTLLSSBBBBBBBBKDTTLLSSBBBBBBBB";
 
 	// "Rochade" only for kings
 	function doro()
@@ -127,18 +130,10 @@ var Game = function()
 		// default placement (white first), K-D-T-L-S-B
 		const ListeG = "e1d1a1h1c1f1b1g1a2b2c2d2e2f2g2h2e8d8a8h8c8f8b8g8a7b7c7d7e7f7g7h7";
 		const ListeF = "KDTTLLSSBBBBBBBBKDTTLLSSBBBBBBBB";
-		const types = { 
-			K: "King", 
-			D: "Queen", 
-			T: "Rook", 
-			L: "Bishop", 
-			S: "Knight", 
-			B: "Pawn" 
-		};
 		// default values
-		SB.zugNr   = 1;
-		var Liste1 = ListeG;
-		var Liste2 = ListeF;
+		SB.zugNr = 1;
+		Liste1   = ListeG;
+		Liste2   = ListeF;
 		// reset notation display
 		document.getElementById("Notation").innerHTML = "";
 		// check if cookie has values (not null)
@@ -163,18 +158,18 @@ var Game = function()
 			{
 				var part = arrHis[j].split(",");
 				if (!part[0]) continue;
-				var InfoFarbe = function(os) 
+				function InfoFarbe(os) 
 				{
 					this.von = part[os],
 					this.auf = part[os+1],
 					this.id  = part[os+2],
-					this.typ = ListeF.charAt(part[os+2]),
+					this.typ = Liste2.charAt(part[os+2]),
 					this.comment = [
 						part[os+3],
 						part[os+4],
 						part[os+5]
 					]
-				};
+				}
 				// set .moves property
 				var w = new InfoFarbe(1);
 				SB.moves.push({ runde: part[0], white: w });
@@ -182,8 +177,7 @@ var Game = function()
 				SB.whiteOnDraw = true;
 				add_note(w);
 				if (10 < part.length)
-				{
-					// set .moves property
+				{	// set .moves property
 					var b = new InfoFarbe(7);
 					SB.moves[SB.moves.length-1].black = b;
 					// display history (black)
@@ -191,7 +185,7 @@ var Game = function()
 					add_note(b);
 				}
 			}
-			SB.whiteOnDraw = "false" == CookieFarbe ? false : true;
+			SB.whiteOnDraw = ("false" == CookieFarbe) ? false : true;
 			SB.players[0]  = Code.readCookie("Spieler1");
 			SB.players[1]  = Code.readCookie("Spieler2");
 			SB.zugNr       = Code.readCookie("Runde");
@@ -200,6 +194,19 @@ var Game = function()
 		{
 			Fehler("Spielstand kann nicht rekonstruiert werden.");
 		}
+		create();
+	}
+	
+	function create()
+	{
+		const types = { 
+			K: "King", 
+			D: "Queen", 
+			T: "Rook", 
+			L: "Bishop", 
+			S: "Knight", 
+			B: "Pawn" 
+		};
 		// create pieces
 		var clr = "white";
 		for (var i=0; i<32; i++)
@@ -221,7 +228,7 @@ var Game = function()
 		display.forEvery(black);
 		display.forEvery(white);
 	}
-
+	
 	function save()
 	{
 		var valid = 7; // days
@@ -291,9 +298,9 @@ var Game = function()
 			fig.move(nach);				// invalid move
 			// notate
 			var comment = [
-					SB.schlagen ? ":" : "-", 
-					SB.schach   ? "+" : "", 
-					"" // user comment, defined later
+				SB.schlagen ? ":" : "-", 
+				SB.schach   ? "+" : "", 
+				"" // user comment, defined later
 			]
 			var entry = new HistoryEntry(fig, von, nach, comment);
 		/*
@@ -309,7 +316,7 @@ var Game = function()
 		catch (e)
 		{
 			alert(e.message);
-		//	console.log(e.stack);
+			console.log(e.stack);
 		}
 		finally
 		{
@@ -337,9 +344,9 @@ var Game = function()
 			king.shift(flds[1]); // must not be validated 
 			// notate move
 			var comment = [
-					type      ? "-0-" : "-", 
-					SB.schach ? "+"   : "", 
-					"" // user comment, defined later
+				type      ? "-0-" : "-", 
+				SB.schach ? "+"   : "", 
+				"" // user comment, defined later
 			];
 			// display
 			var entry = new HistoryEntry(king, 0, 0, comment);
@@ -348,7 +355,7 @@ var Game = function()
 			add_note(entry);
 			SB.toggle();
 			// view
-			$("Zaehler").innerHTML = SB;
+			document.getElementById("Zaehler").innerHTML = SB;
 			setDisplay.call($(K_anf));
 			setDisplay.call($(king.pos), king.symbol, "pointer");			
 			setDisplay.call($(R_anf));
@@ -378,11 +385,12 @@ var Game = function()
 			at.addEvent("blur", startFeld);
 			// attach button actions
 			go.addEvent("click", exec);
-			doro.call(tp);
-			tp.addEvent("change", doro);
 			r1.addEvent("click", rochade, false, false);
 			r2.addEvent("click", rochade, false, true);
 			ng.addEvent("click", load, false, true);
+			// rochade only for kings
+			doro.call(tp);
+			tp.addEvent("change", doro);
 			// load a game from cookie
 			load(false);
 			// save current standings to cookie
@@ -391,7 +399,7 @@ var Game = function()
 		catch (e)
 		{
 			var txt = e.message || e.description;
-			var stk = e.stack || e.stacktrace;
+			var stk = e.stack   || e.stacktrace;
 			alert(txt);
 			if (window.console)
 			{

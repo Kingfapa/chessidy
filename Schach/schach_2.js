@@ -331,6 +331,37 @@ Pawn.prototype.move = function(to)
 	}
 }
 
+Pawn.prototype.enPassant = function()
+{
+	// B must be on line 5 (w) or 4 (b)
+	var white = this.observer.isWhiteDraw();
+	var line1 = white ? 7 : 2;
+	var line2 = white ? 5 : 4;
+	if (this.getRow(this.pos) != line2)
+	{
+		return false;
+	}
+	// previous move must be B?7-?5 or B?2-?4 on adjacent column
+	var lastMove = this.observer.lastMove();
+	// if not a pawn
+	if ("B" != lastMove.typ)
+	{
+		return false;
+	}
+	// if not a double step
+	if (2 != abs(this.getRow(last.von) - this.getRow(last.auf)))
+	{
+		return false;
+	}
+	// if not on adjacent col
+	if (1 != abs(this.getCol(this.pos) - this.getCol(last.auf)))
+	{
+		return false;
+	}
+// more code
+	return true;
+}
+
 Pawn.prototype.upgrade = function(type)
 {
 	var newPiece, Name;
@@ -471,8 +502,7 @@ Board.prototype.setPosition = function(fig, pos)
 }
 // determine, whether target piece (if any) has opponent's colour
 Board.prototype.hasTarget = function(to)
-{
-	// field is unoccupied
+{	// field is unoccupied
 	if (-1 == this.position.indexOf(to))
 	{
 		return false;
@@ -492,12 +522,42 @@ Board.prototype.capture = function(fld)
 	this.schlagen = cpt;
 	this.schlagen_bak = cpt;
 }
+// history object
+function HistoryEntry(fig, at, to, cm)
+{
+	this.von = at;
+	this.auf = to;
+	this.id  = fig.uid();
+	this.typ = fig.shortType();
+	this.comment = cm;
+}
+// save history object
+Board.prototype.notate = function(he)
+{
+	if (this.whiteOnDraw)
+	{
+		this.moves.push({ runde: this.zugNr, white: he });
+	}
+	else
+	{
+		this.moves[this.moves.length - 1].black = he;
+	}
+}
+
+Board.prototype.lastMove = function()
+{
+	var last = this.moves[this.moves.length-1];
+	if (last.black)
+	{
+		return last.black;
+	}
+	return last.white;
+}
 // test for Check
 Board.prototype.isSchach = function(fig)
 {
 	try
-	{
-		// disable move execution
+	{	// disable move execution
 		this.test     = true;
 		// yes, we try to capture the king
 		this.schlagen = true;
@@ -517,8 +577,7 @@ Board.prototype.isSchach = function(fig)
 		}
 	}
 	finally
-	{
-		// re-enable move execution
+	{	// re-enable move execution
 		this.test     = false;
 		// reset to previous value
 		this.schlagen = this.schlagen_bak;
@@ -529,8 +588,7 @@ Board.prototype.testSchach = function(pce, to)
 {
 	if (!this.schach) return;
 	try
-	{
-		// disable move execution
+	{	// disable move execution
 		this.test     = true;
 		// is there a piece to capture?
 		this.schlagen = this.hasTarget(to);
@@ -548,11 +606,11 @@ Board.prototype.testSchach = function(pce, to)
 		}
 		catch (e)
 		{
-			var opp   = null;
+			var opp     = null;
 		}
-		this.schlagen = true;
 		// where the king is
 		var kf        = this.piece[this.offset(true)].pos;
+		this.schlagen = true;
 		this.trySchach(kf);
 	}
 	catch (e)
@@ -576,8 +634,51 @@ Board.prototype.isSchachmatt = function()
 {
 	try
 	{
-		this.test = true;
-		// some lengthy tests
+		// abort if not in Check
+		if (!this.schach)
+		{
+			return false;
+		}
+		this.test     = true;
+		var king      = this.piece[this.offset(true)];
+		// determine the valid fields the king can move to
+		var kingsFields = [];
+		const feld = [
+			"a1", "a2", "a3", "a4", "a5", "a6", "a7", "a8", 
+			"b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8", 
+			"c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", 
+			"d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", 
+			"e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8", 
+			"f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", 
+			"g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8", 
+			"h1", "h2", "h3", "h4", "h5", "h6", "h7", "h8"
+		]; 
+		for (var i=0; i<64; i++)
+		{
+			try
+			{
+				this.schlagen = this.hasTarget(feld[i]);
+				king.move(feld[i]);
+			}
+			catch (e)
+			{
+				continue;
+			}
+			kingsFields.push(feld[i]);
+		}
+		// do a Check test on every field
+		for (var l, k=0, l=kingsFields.length; k<l; k++)
+		{
+			try
+			{
+				this.trySchach(kingsFields[k]);
+			}
+			catch (e)
+			{
+				continue;
+			}
+			throw new Boolean(false);
+		}
 		throw new String("Schachmatt!");
 	}
 	catch (a)
@@ -585,6 +686,7 @@ Board.prototype.isSchachmatt = function()
 		if (a instanceof String)
 		{
 			alert(a);
+			// do more
 		}
 	}
 	finally
@@ -592,7 +694,7 @@ Board.prototype.isSchachmatt = function()
 		this.test = false;
 	}
 }
-
+// core check routine for any Check test
 Board.prototype.trySchach = function(field)
 {
 	try
@@ -662,26 +764,6 @@ Board.prototype.rochade = function(king, rook)
 	return [felder[1], felder[2]];
 }
 
-function HistoryEntry(fig, at, to, cm)
-{
-	this.von = at;
-	this.auf = to;
-	this.id  = fig.uid();
-	this.typ = fig.shortType();
-	this.comment = cm;
-}
-
-Board.prototype.notate = function(he)
-{
-	if (this.whiteOnDraw)
-	{
-		this.moves.push({ runde: this.zugNr, white: he });
-	}
-	else
-	{
-		this.moves[this.moves.length - 1].black = he;
-	}
-}
 /*
 {Rang}{start}{-|x}{ziel}{comment}
 

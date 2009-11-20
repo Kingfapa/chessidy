@@ -19,12 +19,12 @@ caption {
 }
 #Schachbrett .black {
 	background-color: #a0a0a0;
-	font-family: "MS Mincho", "Arial Unicode MS", "Apple Symbols"; 
+	font-family: "Arial Unicode MS", "MS Mincho", "Apple Symbols"; 
 	font-size: 2em;
 }
 #Schachbrett .white {
 	background-color: #ffffff;
-	font-family: "MS Mincho", "Arial Unicode MS", "Apple Symbols"; 
+	font-family: "Arial Unicode MS", "MS Mincho", "Apple Symbols"; 
 	font-size: 2em;
 }
 .oben {
@@ -51,4 +51,16 @@ caption {
 #Notation span {
 	display: inline-block;
 	width: 7em;
+}
+input, select {
+	margin-right: 1em;
+	margin-bottom: 1em;
+}
+form div {
+	width: 24em;
+	margin-left: 1.7em;
+	text-align: center;
+}
+#update, #upgrade {
+	visibility: hidden;
 }

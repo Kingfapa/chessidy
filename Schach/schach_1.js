@@ -1,6 +1,6 @@
 // user interaction, should define the form getter/setter and event stuff
 // var Game = function(neu)
-var Game = function()
+function Game()
 {
 	// input elements
 	var at = document.getElementById("Von");	// start field
@@ -13,6 +13,7 @@ var Game = function()
 	var r1 = document.getElementById("Klein");	// kleine Rochade
 	var r2 = document.getElementById("Gross");	// große Rochade
 	var ng = document.getElementById("Anfang");	// start new game
+	var rp = document.getElementById("RePlay");	// show game
 	// board fields
 	var black  = Code.getElementsByClassName("black");
 	var white  = Code.getElementsByClassName("white");
@@ -272,9 +273,24 @@ var Game = function()
 		li.appendElement("span", txt, { id: heid });
 	}
 	
+	function dump(exc)
+	{
+		var txt = exc.message || exc.description;
+		var stk = exc.stack   || exc.stacktrace;
+		if (window.console)
+		{
+			window.console.log(stk);
+		}
+		else if (window.opera)
+		{
+			window.opera.postError(stk);
+		}
+		alert(txt);
+	}
+	
 	function exec()
 	{
-		var fig, ep;
+		var fig, ep, sm;
 		var von  = at.value.toLowerCase();
 		var nach = to.value.toLowerCase();
 		try
@@ -289,6 +305,7 @@ var Game = function()
 			// is involved in a Check situation
 			ep = fig.enPassant();
 			fig.move(nach);				// invalid move
+			sm = SB.isSchachmatt(fig);
 			// notate
 			var comment = [
 				SB.schlagen ? ":" : "-", 
@@ -303,9 +320,12 @@ var Game = function()
 				setDisplay(ep.auf);         // remove image
 				SB.position[ep.id]  = "xx"; // move piece to trash
 			}
+			if (sm)
+			{
+				entry.comment[1] = "#";
+			}
 		/*
 			entry.comment[2] = "=D"; // upgrade B->D
-			entry.comment[2] = " #"; // checkmate
 		*/
 			SB.notate(entry);
 			add_note(entry);
@@ -316,8 +336,8 @@ var Game = function()
 		}
 		catch (e)
 		{
-			alert(e.message);
-			console.log(e.stack); // for debugging only
+		//	alert(e.message);
+			dump(e); // for debugging only
 		}
 		finally
 		{
@@ -362,8 +382,8 @@ var Game = function()
 		}
 		catch (e)
 		{
-			alert(e.message);
-			console.log(e.message); // for debugging only
+		//	alert(e.message);
+			dump(e); // for debugging only
 		}
 		finally
 		{
@@ -374,8 +394,7 @@ var Game = function()
 		}
 	}
 
-	init :
-	{
+	init : {
 		try
 		{	// enable mouse selection
 			black.addEventForEach("click", fillFields);
@@ -394,20 +413,110 @@ var Game = function()
 			load(false);
 			// save current standings to cookie
 			window.onbeforeunload = save;
+			// replay game
+			var tmpfn = function() { Replay(SB.moves); }
+			rp.addEvent("click", tmpfn);
 		}
 		catch (e)
 		{	// there are no message exceptions...
-			var txt = e.message || e.description;
-			var stk = e.stack   || e.stacktrace;
-			if (window.console)
-			{
-				window.console.log(stk);
-			}
-			else if (window.opera)
-			{
-				window.opera.postError(stk);
-			}
-			alert(txt);
+			dump(e);
 		}
-	}	
+	}
+}
+
+function Replay(history)
+{
+	if (!(history instanceof Array))
+	{
+		throw new Error("Cannot replay game.");
+	}
+	// board fields
+	var black = Code.getElementsByClassName("black");
+	var white = Code.getElementsByClassName("white");
+	// status display
+	var ct    = document.getElementById("Zaehler") 
+	// board
+	var RP    = new Board;
+	RP.moves  = history.slice(1);
+	// other "global" variables
+	const ListeG = [
+		"e1", "d1", "a1", "h1", "c1", "f1", "b1", "g1", 
+		"a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2", 
+		"e8", "d8", "a8", "h8", "c8", "f8", "b8", "g8", 
+		"a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7"
+	];
+	const ListeF = [
+		"King", "Queen", "Rook", "Rook", "Bishop", "Bishop", "Knight", "Knight", 
+		"Pawn", "Pawn", "Pawn", "Pawn", "Pawn", "Pawn", "Pawn", "Pawn", 
+		"King", "Queen", "Rook", "Rook", "Bishop", "Bishop", "Knight", "Knight", 
+		"Pawn", "Pawn", "Pawn", "Pawn", "Pawn", "Pawn", "Pawn", "Pawn"
+	];
+	var itvID;
+	var count = 0;
+	var farbe = "white";
+
+	function toggle()
+	{
+		if ("white" == farbe)
+		{
+			farbe = "black";
+		}
+		else
+		{
+			farbe = "white";
+			count++;
+		}
+	}
+	
+	function display()
+	{
+		try
+		{
+			this.innerHTML = RP.getFigurAt(this.title).symbol;
+		}
+		catch (e)
+		{
+			this.innerHTML = "";
+		}
+	}
+	
+	function setDisplay(id, view)
+	{
+		document.getElementById(id).innerHTML = view || "";
+	}
+
+	function showMove()
+	{
+		var player = RP.moves[count][farbe];
+		setDisplay(player.von);
+		setDisplay(player.auf, RP.piece[player.id].symbol);
+		toggle();
+		if (RP.moves.length == count + 1 && !RP.moves[count][farbe])
+		{
+			clearInterval(itvID);
+		}
+	}
+	
+	setup : {
+		var clr = "white";
+		for (var i=0; i<32; i++)
+		{
+			if (16 == i)
+			{// set colour to black
+				clr = "black";
+			}
+			var pos = ListeG[i];
+			// create pieces
+			RP.piece[i] = new window[ListeF[i]](i, clr, pos);
+			RP.piece[i].observer = RP;
+			RP.position[i] = pos;
+		}
+		// mount pieces on Board
+		display.forEvery(black);
+		display.forEvery(white);
+	}
+	
+	play : {
+		itvID = setInterval(showMove, 1000);
+	}
 }

@@ -1,5 +1,7 @@
-Events = function() {
-	function array_search(val, arr) {
+Events = function() 
+{
+	function array_search(val, arr) 
+	{
 		var i = arr.length;
 		while (i--) { 
 			if (arr[i] && arr[i] === val) break; 
@@ -7,7 +9,8 @@ Events = function() {
 		return i;
 	}
 
-	function IEEventHandler(e) {
+	function IEEventHandler(e) 
+	{
 		e = e || window.event;
 		var evTypeRef = '__' + e.type, retValue = true;
 		for (var i = 0, j = this[evTypeRef].length; i < j; i++) {
@@ -31,7 +34,11 @@ Events = function() {
 	}
 
 	return {
-		_addEvent : function(obj, evType, fn, useCapture) {
+		_addEvent : function(obj, evType, fn, useCapture) 
+		{
+			if ("function" != typeof fn) {
+				throw new TypeError("Function expected!");
+			}
 			if (!useCapture) {
 				useCapture = false;
 			}
@@ -56,7 +63,8 @@ Events = function() {
 			}
 		},
 		
-		_removeEvent : function(obj, evType, fn, useCapture) {
+		_removeEvent : function(obj, evType, fn, useCapture) 
+		{
 			if (!useCapture) {
 				useCapture = false;
 			}
@@ -77,7 +85,8 @@ Events = function() {
 			}
 		},
 		
-		_addEventForEach : function(list, type, fn, cpt) {
+		_addEventForEach : function(list, type, fn, cpt) 
+		{
 			for (var i=0, len=list.length >>> 0; i<len; i++) {
 				if (i in list) {
 					Events._addEvent(list[i], type, fn, cpt);
@@ -85,7 +94,8 @@ Events = function() {
 			}
 		},
 		
-		_removeEventForEach : function(list, type, fn, cpt) {
+		_removeEventForEach : function(list, type, fn, cpt) 
+		{
 			for (var i=0, len=list.length >>> 0; i<len; i++) {
 				if (i in list) {
 					Events._removeEvent(list[i], type, fn, cpt);
@@ -93,7 +103,8 @@ Events = function() {
 			}
 		},
 				
-		loading : function(callback) {
+		loading : function(callback) 
+		{
 			Events._addEvent(window, "load", callback);
 		}
 	};
@@ -101,9 +112,6 @@ Events = function() {
 
 Element.prototype.addEvent = function(type, fn, cpt) 
 {
-	if ("function" != typeof fn) {
-		throw new TypeError("Function expected!");
-	}
 	if (arguments.length < 4) {
 		Events._addEvent(this, type, fn, cpt);
 	} else {
@@ -117,17 +125,11 @@ Element.prototype.addEvent = function(type, fn, cpt)
 
 Element.prototype.remEvent = function(type, fn, cpt) 
 {
-	if ("function" != typeof fn) {
-		throw new TypeError("Function expected!");
-	}
 	Events._removeEvent(this, type, fn, cpt);
 }
 
 Object.prototype.addEventForEach = function(type, fn, cpt) 
 {
-	if ("function" != typeof fn) {
-		throw new TypeError("Function expected!");
-	}
 	if (arguments.length < 4) {
 		Events._addEventForEach(this, type, fn, cpt);
 	} else {

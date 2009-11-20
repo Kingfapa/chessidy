@@ -25,6 +25,7 @@ Events.loading(Game);
 <!--Grundstellung-->
 		<div id="note_panel">
 			<input type="Button" id="Anfang" value="neues Spiel" tabindex="7"/>
+			<input type="Button" id="RePlay" value="Spiel zeigen"/>
 <!--Notation-->
 			<p>Notation:</p>
 			<ol id="Notation"/>
@@ -151,11 +152,21 @@ Events.loading(Game);
 				<input type="text" id="Von" size="2" maxlength="2" tabindex="2"/>
 				<label for="Nach">nach: </label>
 				<input type="text" id="Nach" size="2" maxlength="2" tabindex="3"/>
+				<input type="button" id="Los" value="Ziehen" tabindex="4"/>
 			</div>
 			<div>
-				<input type="button" id="Los" value="     Los!     " tabindex="4"/><!--Zug machen-->
 				<input type="button" id="Klein" value="Kleine Rochade" tabindex="5"/>
 				<input type="button" id="Gross" value="Gro&szlig;e Rochade" tabindex="6"/>
+			</div>
+			<div>
+				<input type="button" id="update" value="Umwandeln in"/>
+				<select id="upgrade" size="1" tabindex="1">
+					<option value="D" selected="selected">Dame</option>
+					<option value="T">Turm</option>
+					<option value="L">L&auml;ufer</option>
+					<option value="S">Springer</option>
+					<option value="B">Bauer</option>
+				</select>
 			</div>
 		</form>
 	</body>

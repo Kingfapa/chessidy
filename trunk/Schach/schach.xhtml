@@ -22,11 +22,19 @@ Events.loading(Game);
 		</script>
 	</head>
 	<body>
-<!--Grundstellung-->
-		<div id="note_panel">
+		<div id="menubar">
+			<label for="font">Schriftart:</label>
+			<select id="font" size="1">
+				<option value="1">Arial Unicode MS</option>
+				<option value="2">Apple Symbols</option>
+				<option value="3">MS Mincho</option>
+			</select>
+			<label>Spieloptionen:</label>
 			<input type="Button" id="Anfang" value="neues Spiel" tabindex="7"/>
 			<input type="Button" id="RePlay" value="Spiel zeigen"/>
+		</div>
 <!--Notation-->
+		<div id="note_panel">
 			<p>Notation:</p>
 			<ol id="Notation"/>
 			<!-- <input type="Button" id="replay" value="Spiel zeigen"/> -->

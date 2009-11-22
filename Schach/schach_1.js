@@ -409,13 +409,13 @@ function Game()
 			// rochade only for kings
 			doro.call(tp);
 			tp.addEvent("change", doro);
-			// load a game from cookie
-			load(false);
 			// save current standings to cookie
 			window.onbeforeunload = save;
 			// replay game
 			var tmpfn = function() { Replay(SB.moves); }
 			rp.addEvent("click", tmpfn);
+			// load a game from cookie
+			load(false);
 		}
 		catch (e)
 		{	// there are no message exceptions...

@@ -1,6 +1,8 @@
 body {
 	font-family: sans-serif; 
 	font-size: 1em;
+	padding: 0;
+	margin: 0;
 }
 caption {
 	padding-bottom: 1em;
@@ -63,4 +65,13 @@ form div {
 }
 #update, #upgrade {
 	visibility: hidden;
+}
+#menubar {
+	background-color: #333;
+	padding: 0.7em 1em 0;
+}
+#menubar label {
+	color: white;
+	padding-right: 0.5em;
+	font-family: "Optima", "Gill Sans";
 }

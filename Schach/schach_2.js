@@ -101,6 +101,19 @@ Figur.prototype.getCol = function(pos)
 	return cols.indexOf(pos.charAt(0));
 }
 /**
+ * get column and row number of the piece's current position.
+ *
+ * @return (Array)              column & row number
+ */
+Figur.prototype.getRC = function()
+{
+	const cols = " abcdefgh";
+	return [
+		cols.indexOf(this.pos.charAt(0)),
+		Number(this.pos.charAt(1))
+	];
+}
+/**
  * return the piece type as single letter.
  *
  * @return (string)             type letter of the piece (e.g. King=K)
@@ -521,14 +534,11 @@ Pawn.prototype.move = function(to)
 			}
 		}
 	}
-	if (valid)
-	{	// execute if valid
-		this.shift(to);
-	}
-	else
+	if (!valid)
 	{
 		Fehler("Ungültiger Zug"); 
 	}
+	this.shift(to);
 }
 /**
  * Now for the really vexing stuff. a Pawn may capture an opponent's Pawn 
@@ -944,7 +954,7 @@ Board.prototype.testSchach = function(pce, to)
 		var kf        = this.piece[this.offset(true)].pos;
 		this.schlagen = true;
 		// try to move to the king's field
-		this.trySchach(kf);
+		this.trySchach(kf, true);
 	}
 	catch (e)
 	{
@@ -975,43 +985,37 @@ Board.prototype.isSchachmatt = function(fig)
 	{
 		return false;
 	}
+	// try opponent's escape moves
 	try
 	{
-		try
-		{	// try if the Check giving piece is covered
-			this.trySchach(fig.pos); // => proceed
-			// try opponent's escape moves
-			this.whiteOnDraw = !this.whiteOnDraw;
-			var könig = this.piece[this.offset(true)];
-			var kpos  = könig.pos;
-			try
-			{	// check if the Check giving piece can be captured
-				// [inverted failure] => return
-				this.trySchach(fig.pos);
-				try
-				{	// King can capture the piece?
-					// [standard failure] => proceed
-					könig.move(fig.pos);
-					throw new Boolean(true); // => return
-				}
-				catch (e) 
-				{	// discard Errors
-					if (e instanceof Boolean)
-					{
-						return false;
-					}
-				}
-			}
-			catch (e)
-			{	// undo colour toggle
-			//	this.whiteOnDraw = !this.whiteOnDraw;
-				return false;
+// capture the piece or step in the way
+		const cols = " abcdefgh";
+		var könig  = this.piece[this.offset(false)];
+		var spur   = könig.movement(fig.pos);
+		var Z3     = isNaN(spur.diagonal) ? 1 : spur.steps;
+		var Z2     = spur.rows / Z3;
+		var Z1     = spur.cols / Z3;
+		var col    = fig.getCol(fig.pos);
+		var row    = fig.getRow(fig.pos);
+		var cpt    = true; // first field is of opponent's piece
+		for (var i=0; i<Z3; i++)
+		{
+			var feld = cols.charAt(col - Z1*i) + (row - Z2*i);
+			this.trySchach(feld, cpt);
+			if (cpt) 
+			{
+				cpt = false;
 			}
 		}
-		catch (e) { /* piece is covered => proceed */ }
-		// determine the valid fields the king can move to
+	}
+	catch (e)
+	{
+		return false;
+	}
+	try
+	{	// determine the valid fields the king can move to
 		var kingsFields = [];
-		const feld = [
+		const felder = [
 			"a1", "a2", "a3", "a4", "a5", "a6", "a7", "a8", 
 			"b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8", 
 			"c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", 
@@ -1022,29 +1026,27 @@ Board.prototype.isSchachmatt = function(fig)
 			"h1", "h2", "h3", "h4", "h5", "h6", "h7", "h8"
 		]; 
 		this.test = true;
+		this.whiteOnDraw = !this.whiteOnDraw;
+// move king away (including capture)
 		for (var i=0; i<64; i++)
 		{
 			try
 			{
-				this.schlagen = this.hasTarget(feld[i]);
-				könig.move(feld[i]);
+				this.schlagen = this.hasTarget(felder[i]);
+				könig.move(felder[i]);
 			}
 			catch (e)
 			{
 				continue;
 			}
-		/*	finally
-			{
-				könig.pos = kpos;
-			}
-		*/	kingsFields.push(feld[i]);
+			kingsFields.push(felder[i]);
 		}
 		// do a Check test on every field
 		for (var l, k=0, l=kingsFields.length; k<l; k++)
 		{
 			try
 			{
-				this.trySchach(kingsFields[k]);
+				this.trySchach(kingsFields[k], true);
 			}
 			catch (e)
 			{
@@ -1056,7 +1058,6 @@ Board.prototype.isSchachmatt = function(fig)
 	}
 	catch (a)
 	{
-	//	this.whiteOnDraw = !this.whiteOnDraw;
 		if (a instanceof String)
 		{
 			alert(a);
@@ -1070,15 +1071,21 @@ Board.prototype.isSchachmatt = function(fig)
 		this.test = false;
 	}
 }
-// core check routine for any Check test
-// test if any opposite piece can make a valid move to field
-Board.prototype.trySchach = function(field)
+/**
+ * test if any opposite piece can make a valid move to the given field.
+ *
+ * @param (string) field        the target field
+ * @return (void)
+ * @throws (Error)              an opponent's piece can make a valid move
+ *                              to the given field.
+ */
+Board.prototype.trySchach = function(field, capture)
 {
 	try
 	{
 		var offset    = this.offset(false);
 		this.test     = true;
-		this.schlagen = true;		
+		this.schlagen = Boolean(capture);		
 		for (var i=1+offset; i<16+offset; i++)
 		{
 			try
@@ -1107,20 +1114,31 @@ Board.prototype.trySchach = function(field)
 		this.schlagen = false;
 	}
 }
-
+/**
+ * separate procedure for castling
+ *
+ * @param (Figur) king          the involved king
+ * @param (Figur) rook          the involved rook
+ * @return (Array)              the fields where king and rook will move to
+ * @throws (Error)              King is Check (castling forbidden)
+ * @throws (Error)              King has alredy moved (castling not possible)
+ * @throws (Error)              Rook has already moved (this castling not
+ *                              possible)
+ * @throws (Error)              one of the fields where the King moves is in
+ *                              Check (castling forbidden)
+ */
 Board.prototype.rochade = function(king, rook)
-{
-	// König steht im Schach
+{	// King is in Check
 	if (this.schach)
 	{
 		Fehler("König steht im Schach - Rochade ist nicht erlaubt.");
 	}
-	// König wurde bewegt
+	// King has alredy moved
 	if (0 < king.history.length)
 	{
 		Fehler("König wurde bereits gezogen - Rochade ist nicht mehr möglich.");
 	}
-	// Turm wurde bewegt
+	// Rook has already moved
 	if (0 < rook.history.length)
 	{
 		Fehler("Turm wurde bereits gezogen - diese Rochade ist nicht mehr möglich.");
@@ -1133,10 +1151,10 @@ Board.prototype.rochade = function(king, rook)
 		h8 : ["e8", "f8", "g8"]
 	};
 	var felder = fData[rook.pos];
-	// eines der Königsfelder im Schach
+	// one of the fields where the King moves is in Check
 	for (var j=0; j<3; j++)
 	{
-		this.trySchach(felder[j]);
+		this.trySchach(felder[j], true);
 	}
 	return [felder[1], felder[2]];
 }

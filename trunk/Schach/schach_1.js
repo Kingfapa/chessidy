@@ -288,6 +288,31 @@ function Game()
 		alert(txt);
 	}
 	
+	function convert(fig)
+	{
+		if (!(fig instanceof Pawn))
+		{
+			return false;
+		}
+		var line = fig.getCoord(0);
+		if (8 != line || 1 != line)
+		{
+			return false;
+		}
+		var upg = document.getElementById("upgrade");
+		var upd = document.getElementById("update");
+		function doConversion()
+		{
+			fig.upgrade(this.value);
+			upg.style.visibility = "hidden";
+			upd.style.visibility = "hidden";
+			upd.remEvent("click", doConversion, false);
+		}
+		upg.style.visibility = "visible";
+		upd.style.visibility = "visible";
+		upd.addEvent("click", doConversion, false);
+	}
+	
 	function exec()
 	{
 		var fig, ep, sm;
@@ -302,7 +327,7 @@ function Game()
 			SB.capture(nach);
 			// setting this.schlagen for an "en passant" move
 			// does not cover the case where the captured pawn
-			// is involved in a Check situation
+			// is involved in a Checkmate situation
 			ep = fig.enPassant();
 			fig.move(nach);				// invalid move
 			sm = SB.isSchachmatt(fig);
@@ -488,10 +513,11 @@ function Replay(history)
 	function showMove()
 	{
 		var player = RP.moves[count][farbe];
+		// rochade
 		setDisplay(player.von);
 		setDisplay(player.auf, RP.piece[player.id].symbol);
 		toggle();
-		if (RP.moves.length == count + 1 && !RP.moves[count][farbe])
+		if (!RP.moves[count][farbe])
 		{
 			clearInterval(itvID);
 		}

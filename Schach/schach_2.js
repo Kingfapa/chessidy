@@ -114,6 +114,25 @@ Figur.prototype.getRC = function()
 	];
 }
 /**
+ * get column or row number of the piece's current position.
+ *
+ * @param (int) type            return value is column or row
+ * @return (int)                column or row number
+ * @throws (RangeError)         invalid parameter type
+ */
+Figur.prototype.getCoord = function(type)
+{
+	if (0 == Number(type) || "row" == String(type).toLowerCase())
+	{
+		return this.getRow(this.pos);
+	}
+	if (1 == Number(type) || "col" == String(type).toLowerCase().substr(0,3))
+	{
+		return this.getCol(this.pos);
+	}
+	throw new RangeError("Ungültiger Parameterwert.");
+}
+/**
  * return the piece type as single letter.
  *
  * @return (string)             type letter of the piece (e.g. King=K)
@@ -590,8 +609,11 @@ Pawn.prototype.enPassant = function()
 Pawn.prototype.upgrade = function(type)
 {
 	var newPiece, Name;
+	if ("B" == type || "Bauer" == type)
+	{	// no need to create a new pawn
+		return true;
+	}
 	const types = { 
-		B: "Pawn",      Bauer:    "Pawn",
 		D: "Queen", 	Dame:     "Queen", 
 		T: "Rook", 		Turm:     "Rook", 
 		L: "Bishop", 	Läufer:   "Bishop", 

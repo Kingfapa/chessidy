@@ -101,19 +101,6 @@ Figur.prototype.getCol = function(pos)
 	return cols.indexOf(pos.charAt(0));
 }
 /**
- * get column and row number of the piece's current position.
- *
- * @return (Array)              column & row number
- */
-Figur.prototype.getRC = function()
-{
-	const cols = " abcdefgh";
-	return [
-		cols.indexOf(this.pos.charAt(0)),
-		Number(this.pos.charAt(1))
-	];
-}
-/**
  * get column or row number of the piece's current position.
  *
  * @param (int) type            return value is column or row

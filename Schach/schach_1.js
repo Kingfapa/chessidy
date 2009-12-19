@@ -295,7 +295,7 @@ function Game()
 			return false;
 		}
 		var line = fig.getCoord(0);
-		if (8 != line || 1 != line)
+		if (8 != line && 1 != line)
 		{
 			return false;
 		}
@@ -306,7 +306,7 @@ function Game()
 			fig.upgrade(this.value);
 			upg.style.visibility = "hidden";
 			upd.style.visibility = "hidden";
-			upd.remEvent("click", doConversion, false);
+		//	upd.remEvent("click", doConversion, false);
 		}
 		upg.style.visibility = "visible";
 		upd.style.visibility = "visible";

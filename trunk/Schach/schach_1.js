@@ -2,37 +2,37 @@
 // var Game = function(neu)
 function Game()
 {
+	var at, to, tp, ct, go, r1, r2, ng, rp, 
+	    black, white, SB,
+	    Liste1, Liste2;
 	// input elements
-	var at = document.getElementById("Von");	// start field
-	var to = document.getElementById("Nach");	// target field
-	var tp = document.getElementById("Art");	// piece type
+	at = document.getElementById("Von");	// start field
+	to = document.getElementById("Nach");	// target field
+	tp = document.getElementById("Art");	// piece type
 	// output elements
-	var ct = document.getElementById("Zaehler") // status display
+	ct = document.getElementById("Zaehler") // status display
 	// buttons
-	var go = document.getElementById("Los");	// make draw
-	var r1 = document.getElementById("Klein");	// kleine Rochade
-	var r2 = document.getElementById("Gross");	// große Rochade
-	var ng = document.getElementById("Anfang");	// start new game
-	var rp = document.getElementById("RePlay");	// show game
+	go = document.getElementById("Los");	// make draw
+	r1 = document.getElementById("Klein");	// kleine Rochade
+	r2 = document.getElementById("Gross");	// große Rochade
+	ng = document.getElementById("Anfang");	// start new game
+	rp = document.getElementById("RePlay");	// show game
 	// board fields
-	var black  = Code.getElementsByClassName("black");
-	var white  = Code.getElementsByClassName("white");
+	black = Code.getElementsByClassName("black");
+	white = Code.getElementsByClassName("white");
 	// board
-	var SB     = new Board;
+	SB = new Board;
 	// other "global" variables
-	var Liste1 = "e1d1a1h1c1f1b1g1a2b2c2d2e2f2g2h2e8d8a8h8c8f8b8g8a7b7c7d7e7f7g7h7";
-	var Liste2 = "KDTTLLSSBBBBBBBBKDTTLLSSBBBBBBBB";
+	Liste1 = "e1d1a1h1c1f1b1g1a2b2c2d2e2f2g2h2e8d8a8h8c8f8b8g8a7b7c7d7e7f7g7h7";
+	Liste2 = "KDTTLLSSBBBBBBBBKDTTLLSSBBBBBBBB";
 
 	// "Rochade" only for kings
-	function doro()
-	{
-		if ("K" == this.value)
-		{
+	function doro() {
+		if ("K" == this.value) {
 			r1.style.visibility = "visible";
 			r2.style.visibility = "visible";
 		}
-		else
-		{
+		else {
 			r1.style.visibility = "hidden";
 			r2.style.visibility = "hidden";
 		}
@@ -40,17 +40,15 @@ function Game()
 
 	function startFeld()
 	{
-		try
-		{
-			var fig = SB.getFigurAt(at.value);
-			if (fig.isWhite() != SB.isWhiteDraw())
-			{
-				var farbe = (SB.isWhiteDraw()) ? "Weiß" : "Schwarz";
-				Fehler("Falsche Figur, "+farbe+" is am Zug");
+		var fig, farbe;
+		try {
+			fig = SB.getFigurAt(at.value);
+			if (fig.isWhite() != SB.isWhiteDraw()) {
+				farbe = (SB.isWhiteDraw()) ? "Weiß" : "Schwarz";
+				Fehler("Falsche Figur, " + farbe + " is am Zug");
 			}
 		}
-		catch (e)
-		{//	var msg = e.message || e.description;
+		catch (e) {
 			alert(e.message);
 			at.value = "";
 		}
@@ -59,41 +57,34 @@ function Game()
 	// fill form by mouse
 	function fillFields() 
 	{
-		try
-		{
-			var hand = ("pointer" == this.style.cursor);
-			if (!at.value)
-			{
-				if (hand)
-				{
-					var fig = SB.getFigurAt(this.title);
-					if (fig.isWhite() != SB.isWhiteDraw())
-					{
-						var farbe = (SB.isWhiteDraw()) ? "Weiß" : "Schwarz";
+		var hand, fig, farbe;
+		try {
+			hand = ("pointer" == this.style.cursor);
+			if (!at.value) {
+				if (hand) {
+					fig = SB.getFigurAt(this.title);
+					if (fig.isWhite() != SB.isWhiteDraw()) {
+						farbe = (SB.isWhiteDraw()) ? "Weiß" : "Schwarz";
 						Fehler("Falsche Figur, "+farbe+" is am Zug");
 					}
 					at.value = this.title;
 					tp.value = fig.toString().charAt(1);
 					doro.call(tp);
 				}
-				else
-				{
+				else {
 					alert("Ungültiges Feld");
 				}
 			}
-			else if (!to.value)
-			{
+			else if (!to.value) {
 				to.value = this.title;
 				go.focus();
 			}
-			else
-			{
+			else {
 				at.value = "";
 				to.value = "";
 			}
 		}
-		catch (e)
-		{
+		catch (e) {
 			alert(e.message);
 			at.value = "";
 		}
@@ -110,13 +101,11 @@ function Game()
 	{
 		document.getElementsByTagName("caption")[0].innerHTML = SB.whois();
 		ct.innerHTML = SB;
-		try
-		{
+		try {
 			this.innerHTML = SB.getFigurAt(this.title).symbol;
 			this.style.cursor = "pointer";
 		}
-		catch (e)
-		{
+		catch (e) {
 			this.innerHTML = "";
 			this.style.cursor = "default";
 		}
@@ -124,6 +113,7 @@ function Game()
 	
 	function load(neu)
 	{
+		var CookieFarbe, l, j, w, b;
 		// default placement (white first), K-D-T-L-S-B
 		const ListeG = "e1d1a1h1c1f1b1g1a2b2c2d2e2f2g2h2e8d8a8h8c8f8b8g8a7b7c7d7e7f7g7h7";
 		const ListeF = "KDTTLLSSBBBBBBBBKDTTLLSSBBBBBBBB";
@@ -134,25 +124,22 @@ function Game()
 		// reset notation display
 		document.getElementById("Notation").innerHTML = "";
 		// check if cookie has values (not null)
-		var CookieFarbe = Code.readCookie("Farbe");
+		CookieFarbe = Code.readCookie("Farbe");
 		// new game
-		if (neu)
-		{
+		if (neu) {
 			SB.whiteOnDraw = true;
 			SB.players[0]  = prompt("Wer spielt Weiß?", "Weiß");
 			SB.players[1]  = prompt("Wer spielt Schwarz?", "Schwarz");
 			SB.moves       = ["start"];
 		}
 		// replace with cookie values
-		else if (null !== CookieFarbe)
-		{
+		else if (null !== CookieFarbe) {
 			Liste1      = Code.readCookie("Aufstellung");
 			Liste2      = Code.readCookie("Figuren");
 			var arrHis  = Code.readCookie("History").split("|");
 			// deserialize history
 			SB.moves[0] = "loaded";
-			for (var l, j=0, l=arrHis.length; j<l; j++)
-			{
+			for (j = 0, l = arrHis.length; j < l; j++) {
 				var part = arrHis[j].split(",");
 				if (!part[0]) continue;
 				function InfoFarbe(os) 
@@ -168,14 +155,13 @@ function Game()
 					]
 				}
 				// set .moves property
-				var w = new InfoFarbe(1);
+				w = new InfoFarbe(1);
 				SB.moves.push({ runde: part[0], white: w });
 				// display history (white)
 				SB.whiteOnDraw = true;
 				add_note(w);
-				if (10 < part.length)
-				{	// set .moves property
-					var b = new InfoFarbe(7);
+				if (10 < part.length) {	// set .moves property
+					b = new InfoFarbe(7);
 					SB.moves[SB.moves.length-1].black = b;
 					// display history (black)
 					SB.whiteOnDraw = false;
@@ -187,8 +173,7 @@ function Game()
 			SB.players[1]  = Code.readCookie("Spieler2");
 			SB.zugNr       = Code.readCookie("Runde");
 		}
-		else
-		{
+		else {
 			Fehler("Spielstand kann nicht rekonstruiert werden.");
 		}
 		create();
@@ -205,16 +190,14 @@ function Game()
 			B: "Pawn" 
 		};
 		// create pieces
-		var clr = "white";
-		for (var i=0; i<32; i++)
-		{
-			if (16 == i)
-			{// set colour to black
+		var i, pos, clr = "white";
+		for (i = 0; i < 32; i++) {
+			// set colour to black
+			if (16 == i) {
 				clr = "black";
 			}
-			var pos = Liste1.substr(2*i, 2);
-			if (!SB.onBoard(pos) && "xx" != pos) 
-			{
+			pos = Liste1.substr(2*i, 2);
+			if (!SB.onBoard(pos) && "xx" != pos) {
 				Fehler("Spielstand kann nicht rekonstruiert werden.");
 			}
 			SB.piece[i] = new window[types[Liste2.charAt(i)]](i, clr, pos);
@@ -228,20 +211,18 @@ function Game()
 	
 	function save()
 	{
-		var valid = 7; // days
-		var hist = "", stell = "", art = "";
-		for (var i=0; i<32; i++)
-		{
+		// days
+		var i, l, valid = 7, 
+		    hist = "", stell = "", art = "";
+		for (i = 0; i < 32; i++) {
 			stell += SB.position[i];
 			art   += SB.piece[i].shortType();
 		}
-		for (var l, j=1, l=SB.moves.length; j<l; j++)
-		{
+		for (i = 1, l = SB.moves.length; i < l; i++) {
 			var m = SB.moves[j];
-			hist += m.runde+","+m.white.von+","+m.white.auf+","+m.white.id+","+m.white.comment[0]+","+m.white.comment[1]+","+m.white.comment[2];
-			if (m.black)
-			{
-				hist += ","+m.black.von+","+m.black.auf+","+m.black.id+","+m.black.comment[0]+","+m.black.comment[1]+","+m.black.comment[2];
+			hist += m.runde + "," + m.white.von + "," + m.white.auf + "," + m.white.id + "," + m.white.comment[0] + "," + m.white.comment[1] + "," + m.white.comment[2];
+			if (m.black) {
+				hist += "," + m.black.von + "," + m.black.auf + "," + m.black.id + "," + m.black.comment[0] + "," + m.black.comment[1] + "," + m.black.comment[2];
 			}
 			hist += "|";
 		}
@@ -257,32 +238,34 @@ function Game()
 	
 	function add_note(info)
 	{
-		var txt, li, ol = document.getElementById("Notation");
-		if (SB.isWhiteDraw())
-		{
+		var list, txt, heid, li, cm0,
+		    ol = document.getElementById("Notation");
+		if (SB.isWhiteDraw()) {
 			li = ol.appendElement("li", "");
 		}
-		else
-		{
-			var list = ol.getElementsByTagName("li");
-			li = list[list.length-1];
+		else {
+			list = ol.getElementsByTagName("li");
+			li   = list[list.length - 1];
 		}
-		txt = info.typ+info.von+info.comment[0]+info.auf+info.comment[1]+" "+info.comment[2]+" ";
+		txt = info.typ + info.von + info.comment[0] + info.auf + info.comment[1] + " " + info.comment[2] + " ";
 		txt = txt.replace("B", String.fromCharCode(160)).replace(":", String.fromCharCode(10799));
-		var heid = "r"+SB.zugNr+(SB.isWhiteDraw() ? "w" : "b");
+		heid = "r" + SB.zugNr + (SB.isWhiteDraw() ? "w" : "b");
+		// special format for castling
+		cm0 = info.comment[0];
+		if ("0-0" == cm0 || "0-0-0" == cm0) {
+			txt = cm0;
+		}
 		li.appendElement("span", txt, { id: heid });
 	}
 	
 	function dump(exc)
 	{
-		var txt = exc.message || exc.description;
-		var stk = exc.stack   || exc.stacktrace;
-		if (window.console)
-		{
+		var txt = exc.message,
+		    stk = exc.stack   || exc.stacktrace;
+		if (window.console) {
 			window.console.log(stk);
 		}
-		else if (window.opera)
-		{
+		else if (window.opera) {
 			window.opera.postError(stk);
 		}
 		alert(txt);
@@ -290,17 +273,15 @@ function Game()
 	
 	function convert(fig)
 	{
-		if (!(fig instanceof Pawn))
-		{
+		if (!(fig instanceof Pawn)) {
 			return false;
 		}
-		var line = fig.getCoord(0);
-		if (8 != line && 1 != line)
-		{
+		var upg, upd, line = fig.getCoord(0);
+		if (8 != line && 1 != line) {
 			return false;
 		}
-		var upg = document.getElementById("upgrade");
-		var upd = document.getElementById("update");
+		upg = document.getElementById("upgrade");
+		upd = document.getElementById("update");
 		function doConversion()
 		{
 			fig.upgrade(this.value);
@@ -311,15 +292,15 @@ function Game()
 		upg.style.visibility = "visible";
 		upd.style.visibility = "visible";
 		upd.addEvent("click", doConversion, false);
+		return true;
 	}
 	
 	function exec()
 	{
-		var fig, ep, sm;
-		var von  = at.value.toLowerCase();
-		var nach = to.value.toLowerCase();
-		try
-		{
+		var fig, ep, sm,
+		    von  = at.value.toLowerCase(),
+		    nach = to.value.toLowerCase();
+		try {
 			SB.onBoard(von)  || Fehler("Ungültiges Feld");
 			SB.onBoard(nach) || Fehler("Ungültiges Feld");
 			fig = SB.getFigurAt(von);	// no piece at "von"
@@ -339,14 +320,12 @@ function Game()
 			]
 			var entry = new HistoryEntry(fig, von, nach, comment);
 			// modify for "en passant moves"
-			if (ep instanceof HistoryEntry)
-			{
+			if (ep instanceof HistoryEntry) {
 				entry.comment[2] = " e.p."; // en passant
 				setDisplay(ep.auf);         // remove image
 				SB.position[ep.id]  = "xx"; // move piece to trash
 			}
-			if (sm)
-			{
+			if (sm) {
 				entry.comment[1] = "#";
 			}
 		/*
@@ -359,13 +338,11 @@ function Game()
 			setDisplay(von);
 			setDisplay(nach, fig.symbol, "pointer");
 		}
-		catch (e)
-		{
+		catch (e) {
 		//	alert(e.message);
 			dump(e); // for debugging only
 		}
-		finally
-		{
+		finally {
 			SB.schlagen     = false;
 			SB.schlagen_bak = false;
 			to.value        = "";
@@ -375,28 +352,29 @@ function Game()
 		
 	function rochade(type) 
 	{
-		try
-		{	// get affected King & Rook
-			var offs  = SB.offset(true);
-			var king  = SB.piece[offs];
-			var rook  = type ? SB.piece[offs+2] : SB.piece[offs+3];
-			var K_anf = king.pos;
-			var R_anf = rook.pos;
+		var offs, king, rook, K_anf, R_anf, flds, entry, comment;
+		try {
+			// get affected King & Rook
+			offs  = SB.offset(true);
+			king  = SB.piece[offs];
+			rook  = type ? SB.piece[offs+2] : SB.piece[offs+3];
+			K_anf = king.pos;
+			R_anf = rook.pos;
 			// check conditions
-			var flds  = SB.rochade(king, rook);
+			flds  = SB.rochade(king, rook);
 			// move the pieces
 			rook.move(flds[0]);
 			king.shift(flds[1]); // must not be validated 
 			// notate move
-			var comment = [
-				type      ? "-0-" : "-", 
+			comment = [
+				type      ? "0-0-0" : "0-0", 
 				SB.schach ? "+"   : "", 
 				"" // user comment, defined later
 			];
-			var entry = new HistoryEntry(king, 0, 0, comment);
+			entry = new HistoryEntry(king, rook.pos, king.pos, comment);
 			SB.notate(entry);
 			entry.typ = " ";
-			add_note(entry);
+			add_note(entry); // special treatment!
 			SB.toggle();
 			// view
 			ct.innerHTML = SB;
@@ -405,8 +383,7 @@ function Game()
 			setDisplay(R_anf);
 			setDisplay(rook.pos, rook.symbol, "pointer");			
 		}
-		catch (e)
-		{
+		catch (e) {
 		//	alert(e.message);
 			dump(e); // for debugging only
 		}
@@ -420,8 +397,9 @@ function Game()
 	}
 
 	init : {
-		try
-		{	// enable mouse selection
+		var tmpfn;
+		try {
+			// enable mouse selection
 			black.addEventForEach("click", fillFields);
 			white.addEventForEach("click", fillFields);
 			// check piece colour of start field
@@ -437,13 +415,16 @@ function Game()
 			// save current standings to cookie
 			window.onbeforeunload = save;
 			// replay game
-			var tmpfn = function() { Replay(SB.moves); }
+			tmpfn = function ()
+			{	// need the closure
+				Replay(SB.moves);
+			}
 			rp.addEvent("click", tmpfn);
 			// load a game from cookie
 			load(false);
 		}
-		catch (e)
-		{	// there are no message exceptions...
+		catch (e) {
+			// there are no message exceptions...
 			dump(e);
 		}
 	}
@@ -451,17 +432,19 @@ function Game()
 
 function Replay(history)
 {
-	if (!(history instanceof Array))
-	{
+	if (!(history instanceof Array)) {
 		throw new Error("Cannot replay game.");
 	}
+	var itvID, i, clr,
+	    count = 0, 
+	    farbe = "white",
 	// board fields
-	var black = Code.getElementsByClassName("black");
-	var white = Code.getElementsByClassName("white");
+	    black = Code.getElementsByClassName("black"),
+	    white = Code.getElementsByClassName("white"),
 	// status display
-	var ct    = document.getElementById("Zaehler") 
+	    ct = document.getElementById("Zaehler");
 	// board
-	var RP    = new Board;
+	var RP    = new Board();
 	RP.moves  = history.slice(1);
 	// other "global" variables
 	const ListeG = [
@@ -476,18 +459,13 @@ function Replay(history)
 		"King", "Queen", "Rook", "Rook", "Bishop", "Bishop", "Knight", "Knight", 
 		"Pawn", "Pawn", "Pawn", "Pawn", "Pawn", "Pawn", "Pawn", "Pawn"
 	];
-	var itvID;
-	var count = 0;
-	var farbe = "white";
 
 	function toggle()
 	{
-		if ("white" == farbe)
-		{
+		if ("white" == farbe) {
 			farbe = "black";
 		}
-		else
-		{
+		else {
 			farbe = "white";
 			count++;
 		}
@@ -495,12 +473,10 @@ function Replay(history)
 	
 	function display()
 	{
-		try
-		{
+		try {
 			this.innerHTML = RP.getFigurAt(this.title).symbol;
 		}
-		catch (e)
-		{
+		catch (e) {
 			this.innerHTML = "";
 		}
 	}
@@ -512,23 +488,37 @@ function Replay(history)
 
 	function showMove()
 	{
-		var player = RP.moves[count][farbe];
+		const paar = {
+			c1 : [ 0, "e1", "c1",  2, "a1", "d1"],
+			g1 : [ 0, "e1", "g1",  3, "h1", "f1"],
+			c8 : [16, "e8", "c8", 18, "a8", "d8"],
+			g8 : [16, "e8", "g8", 19, "h8", "f8"]
+		};
+		var castle, player = RP.moves[count][farbe];
 		// rochade
-		setDisplay(player.von);
-		setDisplay(player.auf, RP.piece[player.id].symbol);
+		if ("0-0" == player.comment[0] || "0-0-0" == player.comment[0]) {
+			// get king / rook array
+			castle = paar[player.auf];
+			setDisplay(castle[1]);
+			setDisplay(castle[2], RP.piece[castle[0]].symbol);
+			setDisplay(castle[4]);
+			setDisplay(castle[5], RP.piece[castle[3]].symbol);
+		}
+		else {
+			setDisplay(player.von);
+			setDisplay(player.auf, RP.piece[player.id].symbol);
+		}
 		toggle();
-		if (!RP.moves[count][farbe])
-		{
+		if (!RP.moves[count][farbe]) {
 			clearInterval(itvID);
 		}
 	}
 	
 	setup : {
-		var clr = "white";
-		for (var i=0; i<32; i++)
-		{
-			if (16 == i)
-			{// set colour to black
+		clr = "white";
+		for (i = 0; i < 32; i++) {
+			if (16 == i) {
+				// set colour to black
 				clr = "black";
 			}
 			var pos = ListeG[i];

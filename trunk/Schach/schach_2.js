@@ -63,11 +63,10 @@ function Figur()
  *                              to white (true).
  * @return (bool)               true (false) for white (black) pieces.
  */
-Figur.prototype.setColour = function(clr)
+Figur.prototype.setColour = function (clr)
 {
 	var clr = String(clr);
-	switch (clr.toLowerCase())
-	{
+	switch (clr.toLowerCase()) {
 		case "black":
 		case "schwarz":
 		case "false":
@@ -76,30 +75,30 @@ Figur.prototype.setColour = function(clr)
 		default:
 			return true;
 	}
-}
+};
 /**
  * return the row number from the piece's position for move calculation.
  *
  * @param (string) pos          position of the piece (e.g. "c2").
  * @return (int)                row number of the position.
  */
-Figur.prototype.getRow = function(pos)
+Figur.prototype.getRow = function (pos)
 {
 	pos = pos.toLowerCase();
 	return Number(pos.charAt(1));
-}
+};
 /**
  * return the column number from the piece's position for move calculation.
  *
  * @param (string) pos          position of the piece (e.g. "c2").
  * @return (int)                column number of the position (a=1).
  */
-Figur.prototype.getCol = function(pos)
+Figur.prototype.getCol = function (pos)
 {
 	pos = pos.toLowerCase();
 	const cols = " abcdefgh";
 	return cols.indexOf(pos.charAt(0));
-}
+};
 /**
  * get column or row number of the piece's current position.
  *
@@ -107,27 +106,25 @@ Figur.prototype.getCol = function(pos)
  * @return (int)                column or row number
  * @throws (RangeError)         invalid parameter type
  */
-Figur.prototype.getCoord = function(type)
+Figur.prototype.getCoord = function (type)
 {
-	if (0 == Number(type) || "row" == String(type).toLowerCase())
-	{
+	if (0 == Number(type) || "row" == String(type).toLowerCase()) {
 		return this.getRow(this.pos);
 	}
-	if (1 == Number(type) || "col" == String(type).toLowerCase().substr(0,3))
-	{
+	if (1 == Number(type) || "col" == String(type).toLowerCase().substr(0,3)) {
 		return this.getCol(this.pos);
 	}
 	throw new RangeError("Ungültiger Parameterwert.");
-}
+};
 /**
  * return the piece type as single letter.
  *
  * @return (string)             type letter of the piece (e.g. King=K)
  */
-Figur.prototype.shortType = function()
+Figur.prototype.shortType = function ()
 {
 	return this.toString().charAt(1);
-}
+};
 /**
  * calculate various characteristic move numbers. "cols": number of passed
  * columns, "rows": number of passed rows, "distance": square of the real 
@@ -140,41 +137,38 @@ Figur.prototype.shortType = function()
  * @return (Object)             the characteristic numbers.
  * @throws (Error)              start and target field are the same.
  */
-Figur.prototype.movement = function(to)
+Figur.prototype.movement = function (to)
 {
-	var rowTo, colTo, quot;
-	var dif1 = this.getCol(to) - this.getCol(this.pos);
-	var dif2 = this.getRow(to) - this.getRow(this.pos);
-	if (0 == dif1 && 0 == dif2)
-	{
+	var rowTo, colTo, quot, dif1, dif2, entf, absl;
+	dif1 = this.getCol(to) - this.getCol(this.pos);
+	dif2 = this.getRow(to) - this.getRow(this.pos);
+	if (0 == dif1 && 0 == dif2) {
 		Fehler("Start- und Zielfeld sind identisch");
 	}
 	// square of real distance
-	var entf = dif1*dif1 + dif2*dif2; 
+	entf = dif1 * dif1 + dif2 * dif2; 
 	// orthogonal number of steps to target
-	var absl = Math.abs(dif1) + Math.abs(dif2); 
+	absl = Math.abs(dif1) + Math.abs(dif2); 
 	// direction (0: straight, 1: diagonal positive, -1: diagonal negative)
-	if (0 == dif1 || 0 == dif2)
-	{
+	if (0 == dif1 || 0 == dif2) {
 		quot = 0;
 	}
-	else if (Math.abs(dif1) == Math.abs(dif2))
-	{
-		quot = dif1/dif2;
-		absl /= 2; // diagonal number of steps to target
+	else if (Math.abs(dif1) == Math.abs(dif2)) {
+		quot = dif1 / dif2;
+		// diagonal number of steps to target
+		absl /= 2; 
 	}
-	else
-	{
+	else {
 		quot = NaN;
 	}
 	return {
-		cols: dif1,
-		rows: dif2,
+		cols    : dif1,
+		rows    : dif2,
 		distance: entf,
-		steps: absl,
+		steps   : absl,
 		diagonal: quot 
 	};
-}
+};
 /**
  * check whether any piece is between current position and target field.
  * if piece is in capturing mode, target field is left unchecked.
@@ -183,43 +177,38 @@ Figur.prototype.movement = function(to)
  * @return (bool)             	true.
  * @throws (Error)              piece between start and target field.
  */
-Figur.prototype.freeWay = function(to)
+Figur.prototype.freeWay = function (to)
 {
-	var trail = this.movement(to);
+	var Z1, Z2, Z3, feld, col, row, i, j, trail = this.movement(to);
 	// does not apply to Knights
-	if (isNaN(trail.diagonal))
-	{
+	if (isNaN(trail.diagonal)) {
 		return true;
 	}
-	var Z1, Z2, Z3, feld, col, row;
 	const cols = " abcdefgh";
 	Z3  = trail.steps;     // the number of fields to check
 	Z2  = trail.rows / Z3; // vertical increment (-1|0|1)
 	Z1  = trail.cols / Z3; // horizontal increment (-1|0|1)
 	col = this.getCol(to); // use target field as start field
 	row = this.getRow(to); // --"--
-	var j = Number(this.observer.isFight());
-	for (var i=j; i<Z3; i++)
-	{
-		feld = cols.charAt(col - Z1*i) + (row - Z2*i);
-		if (-1 != this.observer.position.indexOf(feld))
-		{
+	j   = Number(this.observer.isFight());
+	for (i = j; i < Z3; i++) {
+		feld = cols.charAt(col - Z1 * i) + (row - Z2 * i);
+		if (-1 != this.observer.position.indexOf(feld)) {
 			Fehler("Ungültiger Zug - Figur steht im Weg");
 		}
 	}
 	return true;
-}
+};
 /**
  * update the position of the piece on the board (i.e. execute the move).
  *
  * @param (string)              new position of the current piece.
  * @return (void)
  */
-Figur.prototype.shift = function(to)
+Figur.prototype.shift = function (to)
 {
 	// don't update on tests
-	if (this.observer.test) 
-	{
+	if (this.observer.test) {
 		return;
 	}
 	this.pos = to;
@@ -227,16 +216,16 @@ Figur.prototype.shift = function(to)
 	this.history.push([this.observer.zugNr, to]);
 	// update the position on the board
 	this.observer.updatePosition(this.uid(), to);
-}
+};
 /**
  * dummy method only replaced in Pawn, so I can call it safely. reason:
  * enPassant() is called on any piece, but only Pawns are allowed to do
  * such a move.
  */
-Figur.prototype.enPassant = function()
+Figur.prototype.enPassant = function ()
 {
 	return false;
-}
+};
 /**
  * Object representing the King pieces. the piece colour and id can be 
  * retrieved by a closure to prevent overwriting the values (which must 
@@ -273,10 +262,10 @@ King.extend(Figur);
  *
  * @return (string)              colour and type of the piece
  */
-King.prototype.toString = function()
+King.prototype.toString = function ()
 {
 	return this.isWhite() ? "wK" : "sK";
-}
+};
 /**
  * determine, whether a valid move can be made. (type-dependend check)
  *
@@ -284,7 +273,7 @@ King.prototype.toString = function()
  * @throws (Error)              invalid move (too long).
  * @throws (Error)              distance between kings too short.
  */
-King.prototype.move = function(to)
+King.prototype.move = function (to)
 {
 	var k;
 	// move not more than one step
@@ -295,7 +284,7 @@ King.prototype.move = function(to)
 	(3 < this.movement(k).distance) || Fehler("Ungültiger Zug - Entfernung zum anderen König zu kurz");
 	// execute move
 	this.shift(to);
-}
+};
 /**
  * Object representing the Queen pieces. (see King() for description)
  *
@@ -323,17 +312,17 @@ Queen.extend(Figur);
  *
  * @return (string)              colour and type of the piece
  */
-Queen.prototype.toString = function()
+Queen.prototype.toString = function ()
 {
 	return this.isWhite() ? "wD" : "sD";
-}
+};
 /**
  * determine, whether a valid move can be made. (type-dependend check)
  *
  * @param (string) to           target field of move.
  * @throws (Error)              invalid move (not a straight or diagonal move).
  */
-Queen.prototype.move = function(to)
+Queen.prototype.move = function (to)
 {
 	// not a straight or diagonal move
 	(!isNaN(this.movement(to).diagonal)) || Fehler("Ungültiger Zug");
@@ -341,7 +330,7 @@ Queen.prototype.move = function(to)
 	this.freeWay(to);
 	// execute move
 	this.shift(to);
-}
+};
 /**
  * Object representing the Rook pieces. (see King() for description)
  *
@@ -369,17 +358,17 @@ Rook.extend(Figur);
  *
  * @return (string)              colour and type of the piece
  */
-Rook.prototype.toString = function()
+Rook.prototype.toString = function ()
 {
 	return this.isWhite() ? "wT" : "sT";
-}
+};
 /**
  * determine, whether a valid move can be made. (type-dependend check)
  *
  * @param (string) to           target field of move.
  * @throws (Error)              invalid move (not a straight move).
  */
-Rook.prototype.move = function(to)
+Rook.prototype.move = function (to)
 {
 	// only straight moves allowed
 	(0 == this.movement(to).diagonal) || Fehler("Ungültiger Zug");
@@ -387,7 +376,7 @@ Rook.prototype.move = function(to)
 	this.freeWay(to);
 	// execute move
 	this.shift(to);
-}
+};
 /**
  * Object representing the Bishop pieces. (see King() for description)
  *
@@ -415,17 +404,17 @@ Bishop.extend(Figur);
  *
  * @return (string)              colour and type of the piece
  */
-Bishop.prototype.toString = function()
+Bishop.prototype.toString = function ()
 {
 	return this.isWhite() ? "wL" : "sL";
-}
+};
 /**
  * determine, whether a valid move can be made. (type-dependend check)
  *
  * @param (string) to           target field of move.
  * @throws (Error)              invalid move (not a diagonal move).
  */
-Bishop.prototype.move = function(to)
+Bishop.prototype.move = function (to)
 {
 	// only diagonal moves allowed
 	(1 == Math.abs(this.movement(to).diagonal)) || Fehler("Ungültiger Zug");
@@ -433,7 +422,7 @@ Bishop.prototype.move = function(to)
 	this.freeWay(to);
 	// execute move
 	this.shift(to);
-}
+};
 /**
  * Object representing the Knight pieces. (see King() for description)
  *
@@ -461,22 +450,22 @@ Knight.extend(Figur);
  *
  * @return (string)              colour and type of the piece
  */
-Knight.prototype.toString = function()
+Knight.prototype.toString = function ()
 {
 	return this.isWhite() ? "wS" : "sS";
-}
+};
 /**
  * determine, whether a valid move can be made. (type-dependend check)
  *
  * @param (string) to           target field of move.
  * @throws (Error)              invalid move (not the right length).
  */
-Knight.prototype.move = function(to)
+Knight.prototype.move = function (to)
 {	// 1^2 + 2^2 = 5, no other piece can move such a distance
 	(5 == this.movement(to).distance) || Fehler("Ungültiger Zug");
 	// execute move
 	this.shift(to);
-}
+};
 /**
  * Object representing the Pawn pieces. (see King() for description)
  *
@@ -504,10 +493,10 @@ Pawn.extend(Figur);
  *
  * @return (string)              colour and type of the piece
  */
-Pawn.prototype.toString = function()
+Pawn.prototype.toString = function ()
 {
 	return this.isWhite() ? "wB" : "sB";
-}
+};
 /**
  * determine, whether a valid move can be made. (type-dependend check) Now 
  * it's getting complicated because of the different move types a pawn can do.
@@ -515,37 +504,38 @@ Pawn.prototype.toString = function()
  * @param (string) to           target field of move.
  * @throws (Error)              invalid move.
  */
-Pawn.prototype.move = function(to)
+Pawn.prototype.move = function (to)
 {
-	var valid    = false, go = this.movement(to);
+	var dir, startRow,
+	    valid = false, 
+	    go    = this.movement(to);
 	// Pawns can only move in one direction ...
-	var dir      = (this.isWhite()) ? 1 : -1;
+	dir       = (this.isWhite()) ? 1 : -1;
 	// ... and are allowed to do a two-step move from their base line
-	var startRow = (this.isWhite()) ? 2 : 7;
+	startRow  = (this.isWhite()) ? 2 : 7;
 	// capturing mode
-	if (this.observer.isFight()) 
-	{	// one ahead & one left/right
+	if (this.observer.isFight()) {
+		// one ahead & one left/right
 		valid = (dir == go.rows && 1 == Math.abs(go.cols));
 	}
 	// regular mode
-	else
-	{	// straight ahead
-		if (0 == go.cols) 
-		{	// one ahead
+	else {
+		// straight ahead
+		if (0 === go.cols) {
+			// one ahead
 			valid = (dir == go.rows); 
 			// two ahead on start
-			if (startRow == this.getRow(this.pos) && 2*dir == go.rows)
-			{	// check if there is a piece in the way
+			if (startRow == this.getRow(this.pos) && 2 * dir == go.rows) {
+				// check if there is a piece in the way
 				valid = this.freeWay(to);
 			}
 		}
 	}
-	if (!valid)
-	{
+	if (!valid) {
 		Fehler("Ungültiger Zug"); 
 	}
 	this.shift(to);
-}
+};
 /**
  * Now for the really vexing stuff. a Pawn may capture an opponent's Pawn 
  * "en passant" (while passing), if 1) the opponent's Pawn made a two-step 
@@ -556,36 +546,33 @@ Pawn.prototype.move = function(to)
  *                              last history entry. (see notate() and 
  *                              HistoryEntry())
  */
-Pawn.prototype.enPassant = function()
+Pawn.prototype.enPassant = function ()
 {	// B must be on line 5 (w) or 4 (b)
-	var white = this.observer.isWhiteDraw();
-	var line1 = white ? 7 : 2;
-	var line2 = white ? 5 : 4;
-	if (this.getRow(this.pos) != line2)
-	{
+	var lastMove,
+	    white = this.observer.isWhiteDraw(),
+	    line1 = white ? 7 : 2,
+	    line2 = white ? 5 : 4;
+	if (this.getRow(this.pos) != line2) {
 		return false;
 	}
 	// previous move must be B?7-?5 or B?2-?4 on adjacent column
-	var lastMove = this.observer.lastMove();
+	lastMove = this.observer.lastMove();
 	// if not a pawn
-	if ("B" != lastMove.typ)
-	{
+	if ("B" != lastMove.typ) {
 		return false;
 	}
 	// if not a double step
-	if (2 != Math.abs(this.getRow(lastMove.von) - this.getRow(lastMove.auf)))
-	{
+	if (2 != Math.abs(this.getRow(lastMove.von) - this.getRow(lastMove.auf))) {
 		return false;
 	}
 	// if not on adjacent col
-	if (1 != Math.abs(this.getCol(this.pos) - this.getCol(lastMove.auf)))
-	{
+	if (1 != Math.abs(this.getCol(this.pos) - this.getCol(lastMove.auf))) {
 		return false;
 	}
 	this.observer.schlagen     = true; 
 	this.observer.schlagen_bak = true;
 	return lastMove;
-}
+};
 /**
  * vexed moves part II. a Pawn can be upgraded to a higher ranking piece
  * besides the King, if he reaches the opponent's base line.
@@ -593,12 +580,12 @@ Pawn.prototype.enPassant = function()
  * @param (string)              new piece type
  * @return (void)
  */
-Pawn.prototype.upgrade = function(type)
+Pawn.prototype.upgrade = function (type)
 {
 	var newPiece, Name;
-	if ("B" == type || "Bauer" == type)
-	{	// no need to create a new pawn
-		return true;
+	if ("B" == type || "Bauer" == type) {
+		// no need to create a new pawn
+		return false;
 	}
 	const types = { 
 		D: "Queen", 	Dame:     "Queen", 
@@ -606,12 +593,10 @@ Pawn.prototype.upgrade = function(type)
 		L: "Bishop", 	Läufer:   "Bishop", 
 		S: "Knight", 	Springer: "Knight"
 	};
-	if (types[type])
-	{
+	if (types[type]) {
 		Name = types[type];
 	}
-	else
-	{
+	else {
 		Fehler("Ungültiger Figurtyp");
 	}
 	// create a new piece using the current settings
@@ -621,7 +606,8 @@ Pawn.prototype.upgrade = function(type)
 	newPiece.history  = this.history;
 	// replace the pawn with the new piece
 	this.observer.piece[this.uid()] = newPiece;
-}
+	return true;
+};
 /**
  * the object representing the chess board. many moves or situations can only
  * be checked knowing where all pieces are (e.g. Checkmate), this is beyond
@@ -654,20 +640,20 @@ function Board()
  *
  * @return (string)             said status message.
  */
-Board.prototype.toString = function()
+Board.prototype.toString = function ()
 {
 	return this.zugNr + ". Zug - " + (this.whiteOnDraw ? "Weiß" : "Schwarz");
 //	return this.zugNr + ". Zug: " + this.players[Number(!this.whiteOnDraw)];
-}
+};
 /**
  * get the names of the players of the current game (informational)
  *
  * @return (string)             string representation of the current players.
  */
-Board.prototype.whois = function()
+Board.prototype.whois = function ()
 {
 	return this.players[0] + " - " + this.players[1];
-}
+};
 /**
  * set the player's names (setter method)
  *
@@ -675,17 +661,15 @@ Board.prototype.whois = function()
  * @param (string) name         name of the player
  * @return (void)
  */
-Board.prototype.setPlayer = function(colour, name)
+Board.prototype.setPlayer = function (colour, name)
 {
-	if ("white" == colour)
-	{
+	if ("white" == colour) {
 		this.players[0] = name;
 	}
-	if ("black" == colour)
-	{
+	if ("black" == colour) {
 		this.players[1] = name;
 	}
-}
+};
 /**
  * check if a field, passed from the input field, is valid (e.g. "r9" is not).
  * (fields can be typed by hand)
@@ -693,12 +677,12 @@ Board.prototype.setPlayer = function(colour, name)
  * @param (string) rc           field name from the input element.
  * @return (bool)               true if a field of the chess board.
  */
-Board.prototype.onBoard = function(rc)
+Board.prototype.onBoard = function (rc)
 {
 	const rows = "12345678";
 	const cols = "abcdefgh";
 	return (cols.indexOf(rc.charAt(0)) != -1 && rows.indexOf(rc.charAt(1)) != -1);
-}
+};
 /**
  * get the piece object of a given field of the chess board.
  *
@@ -706,33 +690,32 @@ Board.prototype.onBoard = function(rc)
  * @return (Figur)              that field's piece's object.
  * @throws (Error)              no piece at that field.
  */
-Board.prototype.getFigurAt = function(pos)
+Board.prototype.getFigurAt = function (pos)
 {
 	var i = this.position.indexOf(pos);
-	if (-1 == i)
-	{
+	if (-1 == i) {
 		Fehler("Feld nicht belegt");
 	}
 	return this.piece[i];
-}
+};
 /**
  * get the capture status (getter method).
  *
  * @return (bool)               in capturing mode?
  */
-Board.prototype.isFight = function()
+Board.prototype.isFight = function ()
 {
 	return this.schlagen;
-}
+};
 /**
  * get the current draw's status, colour only (getter method).
  *
  * @return (bool)               whether white is on draw.
  */
-Board.prototype.isWhiteDraw = function()
+Board.prototype.isWhiteDraw = function ()
 {
 	return this.whiteOnDraw;
-}
+};
 /**
  * determine the offset (id of the King) if there is to loop over all pieces
  * of one colour. 
@@ -740,52 +723,49 @@ Board.prototype.isWhiteDraw = function()
  * @param (bool) same           looping over the same colour that is on draw.
  * @return (int)                offset (0|16)
  */
-Board.prototype.offset = function(same)
+Board.prototype.offset = function (same)
 {
-	if (same)
-	{
-		var os = this.whiteOnDraw ? 0 : 16;
+	var os;
+	if (same) {
+		os = this.whiteOnDraw ? 0 : 16;
 	}
-	else
-	{
-		var os = this.whiteOnDraw ? 16 : 0;
+	else {
+		os = this.whiteOnDraw ? 16 : 0;
 	}
-	return  os;
-}
+	return os;
+};
 /**
  * after the move is made proceed to the next draw/turn. i.e. increase the 
  * turn number if white is next and change the colour in possession.
  *
  * @return (void)
  */
-Board.prototype.toggle = function()
+Board.prototype.toggle = function ()
 {
 	this.whiteOnDraw = !this.whiteOnDraw;
-	if (this.whiteOnDraw)
-	{
+	if (this.whiteOnDraw) {
 		this.zugNr++;
 	}
-}
+};
 /**
  * update the positions of the currently involved pieces in the Board object.
  *
  * @param (int) num             id of the piece
  * @param (string) pos          new position of the piece
  */
-Board.prototype.updatePosition = function(num, pos)
+Board.prototype.updatePosition = function (num, pos)
 {	// if there is a piece captured, set its position (on the board and in the
 	// piece's object) to xx (captured)
-	idx = this.position.indexOf(pos);
-	if (this.schlagen && -1 != idx)
-	{
+	var idx = this.position.indexOf(pos);
+	if (this.schlagen && -1 != idx) {
 		this.piece[idx].pos = "xx";
 		this.position[idx]  = "xx";
 	}
 	// update the boards position array
-	this.position[num] = pos.substr(0,2); // just to make sure
+	this.position[num] = pos.substr(0, 2); // just to make sure
 	// test for Check
 	this.isSchach(this.piece[num]);
-}
+};
 /**
  * change the board's position property array and the piece's pos
  * property (temporarily).
@@ -793,11 +773,11 @@ Board.prototype.updatePosition = function(num, pos)
  * @param (Figur) fig           piece object
  * @return (string)             previous position of that piece.
  */
-Board.prototype.setPosition = function(fig, pos)
+Board.prototype.setPosition = function (fig, pos)
 {
 	fig.pos = pos;
 	return this.position.swap(fig.uid(), pos);	
-}
+};
 /**
  * determine, whether the target field is occupied and by which piece
  * (black or white)
@@ -807,20 +787,18 @@ Board.prototype.setPosition = function(fig, pos)
  * @throws (Error)              target field occupied by a piece of the
  *                              same colour.
  */
-Board.prototype.hasTarget = function(to)
+Board.prototype.hasTarget = function (to)
 {	// field is unoccupied
-	if (-1 == this.position.indexOf(to))
-	{
+	if (-1 == this.position.indexOf(to)) {
 		return false;
 	}
 	// opponent's piece on the field
-	if (this.isWhiteDraw() != this.getFigurAt(to).isWhite())
-	{
+	if (this.isWhiteDraw() != this.getFigurAt(to).isWhite()) {
 		return true;
 	}
 	// own piece on the field
 	Fehler("Ungültiger Zug - eigene Figur auf dem Zielfeld");
-}
+};
 /**
  * define the capture mode (and do a backup).
  *
@@ -828,12 +806,12 @@ Board.prototype.hasTarget = function(to)
  * @return (void)
  * @throws (Error)              Error from Board.hasTarget()
  */
-Board.prototype.capture = function(fld)
+Board.prototype.capture = function (fld)
 {
 	var cpt = this.hasTarget(fld);
 	this.schlagen = cpt;
 	this.schlagen_bak = cpt;
-}
+};
 /**
  * object to save the game history in.
  *
@@ -858,31 +836,28 @@ function HistoryEntry(fig, at, to, cm)
  * @param (HistoryEntry) he     entry object
  * @return (void)
  */
-Board.prototype.notate = function(he)
+Board.prototype.notate = function (he)
 {
-	if (this.whiteOnDraw)
-	{
+	if (this.whiteOnDraw) {
 		this.moves.push({ runde: this.zugNr, white: he });
 	}
-	else
-	{
+	else {
 		this.moves[this.moves.length - 1].black = he;
 	}
-}
+};
 /**
  * get the last history entry object.
  *
  * @return (HistoryEntry)       last object of history.
  */
-Board.prototype.lastMove = function()
+Board.prototype.lastMove = function ()
 {
 	var last = this.moves[this.moves.length-1];
-	if (last.black)
-	{
+	if (last.black) {
 		return last.black;
 	}
 	return last.white;
-}
+};
 /**
  * test if a piece is giving Check. if so, set the Board.schach property
  * to true.
@@ -890,10 +865,10 @@ Board.prototype.lastMove = function()
  * @param (Figur) fig           piece to check
  * @return (void)
  */
-Board.prototype.isSchach = function(fig)
+Board.prototype.isSchach = function (fig)
 {
-	try
-	{	// disable move execution
+	try {
+		// disable move execution
 		this.test     = true;
 		// yes, we try to capture the king
 		this.schlagen = true;
@@ -905,20 +880,18 @@ Board.prototype.isSchach = function(fig)
 		this.schach   = true;
 		Meldung("Schach!");
 	}
-	catch (a)
-	{
-		if (a instanceof String)
-		{
+	catch (a) {
+		if (a instanceof String) {
 			alert(a);
 		}
 	}
-	finally
-	{	// re-enable move execution
+	finally {
+		// re-enable move execution
 		this.test     = false;
 		// reset to previous value
 		this.schlagen = this.schlagen_bak;
 	}
-}
+};
 /**
  * test, if Check is resolved by trying to move every opponent's piece onto
  * the King. if the current piece does not prevent this, its move is invalid.
@@ -930,49 +903,43 @@ Board.prototype.isSchach = function(fig)
  * @throws (Error)              Error from Figur.move()
  * @throws (Error)              Error from Board.trySchach()
  */
-Board.prototype.testSchach = function(pce, to)
+Board.prototype.testSchach = function (pce, to)
 {
-	if (!this.schach) 
-	{
+	if (!this.schach) {
 		return;
 	}
-	try
-	{
-		var opp, opp_pos;
+	var opp, opp_pos, pce_pos, kf;
+	try {
 		// disable move execution
 		this.test     = true;
 		// is there a piece to capture?
 		this.schlagen = this.hasTarget(to);
-		try
-		{	// capture check giving piece
+		try {	// capture check giving piece
 			opp       = this.getFigurAt(to);
 			opp_pos   = opp.pos;
 			// a captured piece can't threaten the king
 			opp.pos   = "xx";
 		}
-		catch (e)
-		{
+		catch (e) {
 			opp       = null;
 		}
 		// throw exception if invalid move
 		pce.move(to);
 		// save current position & set temporary position 
 		// used in Figur.movement() & Figur.freeWay()
-		var pce_pos   = this.setPosition(pce, to);
+		pce_pos = this.setPosition(pce, to);
 		// where the king is
-		var kf        = this.piece[this.offset(true)].pos;
+		kf      = this.piece[this.offset(true)].pos;
 		this.schlagen = true;
 		// try to move to the king's field
 		this.trySchach(kf, true);
 	}
-	catch (e)
-	{
+	catch (e) {
 		throw e;
 	}
-	finally
-	{	// undo everything temporary
-		if (null != opp)
-		{
+	finally {
+		// undo everything temporary
+		if (null != opp) {
 			opp.pos   = opp_pos;
 		}
 		this.setPosition(pce, pce_pos);
@@ -980,50 +947,46 @@ Board.prototype.testSchach = function(pce, to)
 		this.schlagen = false;
 	}
 	this.schach = false;
-}
+};
 /**
  * test for Checkmate.
  *
  * @param (Figur) fig           Check giving piece (current draw)
  * @return (bool)               Checkmate or not.
  */
-Board.prototype.isSchachmatt = function(fig)
+Board.prototype.isSchachmatt = function (fig)
 {
 	// abort if not in Check
-	if (!this.schach)
-	{
+	if (!this.schach) {
 		return false;
 	}
+	var könig, spur, Z1, Z2, Z3, col, row, cpt, i, k, l, feld,
+	    kingsFields = [];
+	const cols = " abcdefgh";
 	// try opponent's escape moves
-	try
-	{
+	try {
 // capture the piece or step in the way
-		const cols = " abcdefgh";
-		var könig  = this.piece[this.offset(false)];
-		var spur   = könig.movement(fig.pos);
-		var Z3     = isNaN(spur.diagonal) ? 1 : spur.steps;
-		var Z2     = spur.rows / Z3;
-		var Z1     = spur.cols / Z3;
-		var col    = fig.getCol(fig.pos);
-		var row    = fig.getRow(fig.pos);
-		var cpt    = true; // first field is of opponent's piece
-		for (var i=0; i<Z3; i++)
-		{
-			var feld = cols.charAt(col - Z1*i) + (row - Z2*i);
+		könig = this.piece[this.offset(false)];
+		spur  = könig.movement(fig.pos);
+		Z3    = isNaN(spur.diagonal) ? 1 : spur.steps;
+		Z2    = spur.rows / Z3;
+		Z1    = spur.cols / Z3;
+		col   = fig.getCol(fig.pos);
+		row   = fig.getRow(fig.pos);
+		cpt   = true; // first field is of opponent's piece
+		for (i = 0; i < Z3; i++) {
+			feld = cols.charAt(col - Z1 * i) + (row - Z2 * i);
 			this.trySchach(feld, cpt);
-			if (cpt) 
-			{
+			if (cpt) {
 				cpt = false;
 			}
 		}
 	}
-	catch (e)
-	{
+	catch (e) {
 		return false;
 	}
-	try
-	{	// determine the valid fields the king can move to
-		var kingsFields = [];
+	try {
+		// determine the valid fields the king can move to
 		const felder = [
 			"a1", "a2", "a3", "a4", "a5", "a6", "a7", "a8", 
 			"b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8", 
@@ -1037,49 +1000,40 @@ Board.prototype.isSchachmatt = function(fig)
 		this.test = true;
 		this.whiteOnDraw = !this.whiteOnDraw;
 // move king away (including capture)
-		for (var i=0; i<64; i++)
-		{
-			try
-			{
+		for (i = 0; i < 64; i++) {
+			try {
 				this.schlagen = this.hasTarget(felder[i]);
 				könig.move(felder[i]);
 			}
-			catch (e)
-			{
+			catch (e) {
 				continue;
 			}
 			kingsFields.push(felder[i]);
 		}
 		// do a Check test on every field
-		for (var l, k=0, l=kingsFields.length; k<l; k++)
-		{
-			try
-			{
+		for (k = 0, l = kingsFields.length; k < l; k++) {
+			try {
 				this.trySchach(kingsFields[k], true);
 			}
-			catch (e)
-			{
+			catch (e) {
 				continue;
 			}
 			throw new Boolean(false); // skip Checkmate announcement
 		}
 		Meldung("Schachmatt!");
 	}
-	catch (a)
-	{
-		if (a instanceof String)
-		{
+	catch (a) {
+		if (a instanceof String) {
 			alert(a);
 			return true;
 		}
 		return false;
 	}
-	finally
-	{
+	finally {
 		this.whiteOnDraw = !this.whiteOnDraw;
 		this.test = false;
 	}
-}
+};
 /**
  * test if any opposite piece can make a valid move to the given field.
  *
@@ -1088,41 +1042,37 @@ Board.prototype.isSchachmatt = function(fig)
  * @throws (Error)              an opponent's piece can make a valid move
  *                              to the given field.
  */
-Board.prototype.trySchach = function(field, capture)
+Board.prototype.trySchach = function (field, capture)
 {
-	try
-	{
+	var i;
+	try {
 		var offset    = this.offset(false);
 		this.test     = true;
 		this.schlagen = Boolean(capture);		
-		for (var i=1+offset; i<16+offset; i++)
-		{
-			try
-			{
-				if ("xx" == this.piece[i].pos)
-				{
+		for (i = 1 + offset; i < 16 + offset; i++) {
+			try {
+				if ("xx" == this.piece[i].pos) {
 					continue;
 				}
 				this.piece[i].move(field);
 			}
-			catch (e)
-			{	// eventually leave without error
+			catch (e) {
+				// eventually leave without error
 				continue;
 			}
 			// if one piece does a correct move
 			Fehler("König steht noch im Schach!");
 		}
 	}
-	catch (e)
-	{
+	catch (e) {
 		throw e;
 	}
-	finally
-	{	// reset (that's why this try-catch is required)
+	finally {
+		// reset (that's why this try-catch is required)
 		this.test     = false;
 		this.schlagen = false;
 	}
-}
+};
 /**
  * separate procedure for castling
  *
@@ -1136,37 +1086,34 @@ Board.prototype.trySchach = function(field, capture)
  * @throws (Error)              one of the fields where the King moves is in
  *                              Check (castling forbidden)
  */
-Board.prototype.rochade = function(king, rook)
+Board.prototype.rochade = function (king, rook)
 {	// King is in Check
-	if (this.schach)
-	{
+	if (this.schach) {
 		Fehler("König steht im Schach - Rochade ist nicht erlaubt.");
 	}
 	// King has alredy moved
-	if (0 < king.history.length)
-	{
+	if (0 < king.history.length) {
 		Fehler("König wurde bereits gezogen - Rochade ist nicht mehr möglich.");
 	}
+	var fData, felder, j;
 	// Rook has already moved
-	if (0 < rook.history.length)
-	{
+	if (0 < rook.history.length) {
 		Fehler("Turm wurde bereits gezogen - diese Rochade ist nicht mehr möglich.");
 	}
 	// get king's fields
-	var fData = {
+	fData = {
 		a1 : ["e1", "d1", "c1"],	// w/o 1st value possible
 		h1 : ["e1", "f1", "g1"],
 		a8 : ["e8", "d8", "c8"],
 		h8 : ["e8", "f8", "g8"]
 	};
-	var felder = fData[rook.pos];
+	felder = fData[rook.pos];
 	// one of the fields where the King moves is in Check
-	for (var j=0; j<3; j++)
-	{
+	for (j = 0; j < 3; j++) {
 		this.trySchach(felder[j], true);
 	}
 	return [felder[1], felder[2]];
-}
+};
 
 /*
 {Rang}{start}{-|x}{ziel}{comment}

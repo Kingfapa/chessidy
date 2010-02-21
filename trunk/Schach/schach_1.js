@@ -17,6 +17,7 @@ function Game()
 	r2 = document.getElementById("Gross");	// große Rochade
 	ng = document.getElementById("Anfang");	// start new game
 	rp = document.getElementById("RePlay");	// show game
+	sa = document.getElementById("font");	// font style switch
 	// board fields
 	black = Code.getElementsByClassName("black");
 	white = Code.getElementsByClassName("white");
@@ -26,7 +27,7 @@ function Game()
 	Liste1 = "e1d1a1h1c1f1b1g1a2b2c2d2e2f2g2h2e8d8a8h8c8f8b8g8a7b7c7d7e7f7g7h7";
 	Liste2 = "KDTTLLSSBBBBBBBBKDTTLLSSBBBBBBBB";
 
-	// "Rochade" only for kings
+// "Rochade" only for kings
 	function doro() {
 		if ("K" == this.value) {
 			r1.style.visibility = "visible";
@@ -38,6 +39,7 @@ function Game()
 		}
 	}
 
+// determine correctnes of starting field with regards to drawing colour
 	function startFeld()
 	{
 		var fig, farbe;
@@ -54,7 +56,7 @@ function Game()
 		}
 	}
 
-	// fill form by mouse
+// fill form by mouse
 	function fillFields() 
 	{
 		var hand, fig, farbe;
@@ -90,6 +92,7 @@ function Game()
 		}
 	}
 	
+// change a board field's occupation
 	function setDisplay(id, view, shape)
 	{
 		var td = document.getElementById(id); // not checked
@@ -97,6 +100,7 @@ function Game()
 		td.style.cursor = shape || "default";
 	}
 
+// change the board fields
 	function display()
 	{
 		document.getElementsByTagName("caption")[0].innerHTML = SB.whois();
@@ -111,6 +115,7 @@ function Game()
 		}
 	}
 	
+// load settings from Cookie
 	function load(neu)
 	{
 		var CookieFarbe, l, j, w, b;
@@ -179,6 +184,7 @@ function Game()
 		create();
 	}
 	
+// create a new set of pieces
 	function create()
 	{
 		const types = { 
@@ -209,6 +215,7 @@ function Game()
 		display.forEvery(white);
 	}
 	
+// save current standings to Cookie
 	function save()
 	{
 		// days
@@ -236,6 +243,7 @@ function Game()
 		Code.createCookie("History", hist.slice(0, -1), valid);
 	}
 	
+// do notation
 	function add_note(info)
 	{
 		var list, txt, heid, li, cm0,
@@ -258,6 +266,7 @@ function Game()
 		li.appendElement("span", txt, { id: heid });
 	}
 	
+// error reporting
 	function dump(exc)
 	{
 		var txt = exc.message,
@@ -271,6 +280,7 @@ function Game()
 		alert(txt);
 	}
 	
+// piece conversion
 	function convert(fig)
 	{
 		if (!(fig instanceof Pawn)) {
@@ -295,6 +305,7 @@ function Game()
 		return true;
 	}
 	
+// execute a move
 	function exec()
 	{
 		var fig, ep, sm,
@@ -350,6 +361,7 @@ function Game()
 		}
 	}
 		
+// execute Castling
 	function rochade(type) 
 	{
 		var offs, king, rook, K_anf, R_anf, flds, entry, comment;
@@ -395,7 +407,31 @@ function Game()
 			at.value        = "";
 		}
 	}
+	
+	function switcher()
+	{
+		if (!document.styleSheets) {
+			return false;
+		}
+		var i, sel, theRules = [];
+		if (document.styleSheets[0].cssRules) {
+			theRules = document.styleSheets[0].cssRules;
+		}
+		else if (document.styleSheets[0].rules) {
+			theRules = document.styleSheets[0].rules;
+		}
+		else {
+			return false;
+		}
+		for (i = theRules.length; i--;) {
+			sel = theRules[i].selectorText;
+			if (sel.indexOf(".black") != -1 || sel.indexOf(".white") != -1) {
+				theRules[i].style.fontFamily = this.value;
+			}
+		}
+	}
 
+// set events
 	init : {
 		var tmpfn;
 		try {
@@ -409,6 +445,7 @@ function Game()
 			r1.addEvent("click", rochade, false, false);
 			r2.addEvent("click", rochade, false, true);
 			ng.addEvent("click", load, false, true);
+			sa.addEvent("change", switcher);
 			// rochade only for kings
 			doro.call(tp);
 			tp.addEvent("change", doro);
@@ -430,6 +467,7 @@ function Game()
 	}
 }
 
+// replay current game
 function Replay(history)
 {
 	if (!(history instanceof Array)) {
@@ -442,9 +480,9 @@ function Replay(history)
 	    black = Code.getElementsByClassName("black"),
 	    white = Code.getElementsByClassName("white"),
 	// status display
-	    ct = document.getElementById("Zaehler");
+	    ct = document.getElementById("Zaehler"),
 	// board
-	var RP    = new Board();
+	    RP    = new Board();
 	RP.moves  = history.slice(1);
 	// other "global" variables
 	const ListeG = [
@@ -459,6 +497,12 @@ function Replay(history)
 		"King", "Queen", "Rook", "Rook", "Bishop", "Bishop", "Knight", "Knight", 
 		"Pawn", "Pawn", "Pawn", "Pawn", "Pawn", "Pawn", "Pawn", "Pawn"
 	];
+	const paar = {
+		c1 : [ 0, "e1", "c1",  2, "a1", "d1"],
+		g1 : [ 0, "e1", "g1",  3, "h1", "f1"],
+		c8 : [16, "e8", "c8", 18, "a8", "d8"],
+		g8 : [16, "e8", "g8", 19, "h8", "f8"]
+	};
 
 	function toggle()
 	{
@@ -488,12 +532,6 @@ function Replay(history)
 
 	function showMove()
 	{
-		const paar = {
-			c1 : [ 0, "e1", "c1",  2, "a1", "d1"],
-			g1 : [ 0, "e1", "g1",  3, "h1", "f1"],
-			c8 : [16, "e8", "c8", 18, "a8", "d8"],
-			g8 : [16, "e8", "g8", 19, "h8", "f8"]
-		};
 		var castle, player = RP.moves[count][farbe];
 		// rochade
 		if ("0-0" == player.comment[0] || "0-0-0" == player.comment[0]) {
@@ -509,7 +547,7 @@ function Replay(history)
 			setDisplay(player.auf, RP.piece[player.id].symbol);
 		}
 		toggle();
-		if (!RP.moves[count][farbe]) {
+		if (RP.moves[count] === undefined || RP.moves[count][farbe] === undefined) {
 			clearInterval(itvID);
 		}
 	}

@@ -65,7 +65,7 @@ function Figur()
  */
 Figur.prototype.setColour = function (clr)
 {
-	var clr = String(clr);
+	clr = String(clr);
 	switch (clr.toLowerCase()) {
 		case "black":
 		case "schwarz":

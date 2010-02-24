@@ -17,7 +17,6 @@ function Game()
 	r2 = document.getElementById("Gross");	// große Rochade
 	ng = document.getElementById("Anfang");	// start new game
 	rp = document.getElementById("RePlay");	// show game
-	sa = document.getElementById("font");	// font style switch
 	// board fields
 	black = Code.getElementsByClassName("black");
 	white = Code.getElementsByClassName("white");
@@ -408,29 +407,6 @@ function Game()
 		}
 	}
 	
-	function switcher()
-	{
-		if (!document.styleSheets) {
-			return false;
-		}
-		var i, sel, theRules = [];
-		if (document.styleSheets[0].cssRules) {
-			theRules = document.styleSheets[0].cssRules;
-		}
-		else if (document.styleSheets[0].rules) {
-			theRules = document.styleSheets[0].rules;
-		}
-		else {
-			return false;
-		}
-		for (i = theRules.length; i--;) {
-			sel = theRules[i].selectorText;
-			if (sel.indexOf(".black") != -1 || sel.indexOf(".white") != -1) {
-				theRules[i].style.fontFamily = this.value;
-			}
-		}
-	}
-
 // set events
 	init : {
 		var tmpfn;
@@ -445,7 +421,6 @@ function Game()
 			r1.addEvent("click", rochade, false, false);
 			r2.addEvent("click", rochade, false, true);
 			ng.addEvent("click", load, false, true);
-			sa.addEvent("change", switcher);
 			// rochade only for kings
 			doro.call(tp);
 			tp.addEvent("change", doro);
@@ -573,4 +548,31 @@ function Replay(history)
 	play : {
 		itvID = setInterval(showMove, 1000);
 	}
+}
+
+function setFontStyle()
+{
+	function switcher()
+	{
+		if (!document.styleSheets) {
+			return false;
+		}
+		var i, sel, theRules = [];
+		if (document.styleSheets[0].cssRules) {
+			theRules = document.styleSheets[0].cssRules;
+		}
+		else if (document.styleSheets[0].rules) {
+			theRules = document.styleSheets[0].rules;
+		}
+		else {
+			return false;
+		}
+		for (i = theRules.length; i--;) {
+			sel = theRules[i].selectorText;
+			if (sel.indexOf(".black") != -1 || sel.indexOf(".white") != -1) {
+				theRules[i].style.fontFamily = this.value;
+			}
+		}
+	}
+	document.getElementById("font").addEvent("change", switcher);
 }

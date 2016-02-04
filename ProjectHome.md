@@ -1,0 +1,1 @@
+Building a JavaScript (ECMAScript) Chess Board, where you can do Correspondence Chess moves without the need of a real Board (which in most cases is at home). Standings will be saved via cookies.
